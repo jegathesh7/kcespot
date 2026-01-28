@@ -1,25 +1,27 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./component/Header";
-import Achievers from "./Pages/Achievers";
-import Events from "./Pages/Events";
+import AchieversPage from "./Pages/Achievers/AchieversPage";
+import EventsPage from "./Pages/Events/EventsPage";
+import Sidebar from "./component/Sidebar";
 import "./App.css";
 
 function App() {
-return (
-<BrowserRouter>
-<Header />
-
-
-<main className="page-content">
-<Routes>
-<Route path="/" element={<Achievers />} />
-<Route path="/achievers" element={<Achievers />} />
-<Route path="/events" element={<Events />} />
-</Routes>
-</main>
-</BrowserRouter>
-);
+  return (
+    <BrowserRouter>
+      <Header />
+      <div className="app-container">
+        <Sidebar />
+        <main className="page-content-wrapper">
+          <Routes>
+            <Route path="/" element={<AchieversPage />} />
+            <Route path="/achievers" element={<AchieversPage />} />
+            <Route path="/events" element={<EventsPage />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
+  );
 }
 
 

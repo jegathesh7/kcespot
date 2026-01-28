@@ -1,43 +1,98 @@
 import { useEffect, useState } from "react";
+import { Container, Nav } from "react-bootstrap";
 import api from "../../api/axios";
 import AchieversTable from "./AchieversTable";
 import AchieversForm from "./AchieversForm";
 import "./achievers.css";
 
 export default function AchieversPage() {
+  const [activeTab, setActiveTab] = useState("list");
   const [data, setData] = useState([]);
-  const [showForm, setShowForm] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
 
   const loadData = async () => {
-    const res = await api.get("/achievers");
-    setData(res.data);
+    try {
+      const res = await api.get("/achievers");
+      setData(res.data);
+    } catch (error) {
+       console.error("Failed to load achievers", error);
+    }
   };
 
   useEffect(() => {
     loadData();
   }, []);
 
+  const handleEdit = (item) => {
+    setEditingItem(item);
+    setActiveTab("form");
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this achievement?")) {
+      try {
+        await api.delete(`/achievers/${id}`);
+        loadData();
+      } catch (error) {
+         console.error("Failed to delete achievement", error);
+      }
+    }
+  };
+
   const handleSave = async (formData) => {
-    await api.post("/achievers", formData);
-    setShowForm(false);
-    loadData();
+    try {
+      if (editingItem) {
+        await api.put(`/achievers/${editingItem._id}`, formData);
+      } else {
+        await api.post("/achievers", formData);
+      }
+      setActiveTab("list");
+      setEditingItem(null);
+      loadData();
+    } catch (error) {
+       console.error("Failed to save achievement", error);
+       alert("Failed to save achievement");
+    }
+  };
+
+  const handleCancel = () => {
+    setActiveTab("list");
+    setEditingItem(null);
   };
 
   return (
-    <div>
-      {/* Header row */}
-      <div className="page-header">
-        <h2>Achievers Data</h2>
-        <button className="add-btn" onClick={() => setShowForm(true)}>
-          + ADD
-        </button>
+    <Container className="py-4">
+      <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+           <h2 className="fw-bold text-primary mb-0">Achievers Management</h2>
+           <p className="text-muted small mb-0">Record and manage student achievements</p>
+        </div>
       </div>
 
-      {/* Inline Form */}
-      {showForm && <AchieversForm onSave={handleSave} />}
+      <Nav variant="tabs" className="mb-4" activeKey={activeTab} onSelect={(k) => {
+          setActiveTab(k);
+          if (k === "list") setEditingItem(null);
+          else if (k === "form" && !editingItem) setEditingItem(null);
+      }}>
+        <Nav.Item>
+          <Nav.Link eventKey="list" className="fw-bold px-4">View List</Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
+          <Nav.Link eventKey="form" className="fw-bold px-4">{editingItem ? "Edit Entry" : "Add New"}</Nav.Link>
+        </Nav.Item>
+      </Nav>
 
-      {/* Table */}
-      <AchieversTable data={data} />
-    </div>
+      {activeTab === "list" && (
+        <AchieversTable data={data} onEdit={handleEdit} onDelete={handleDelete} />
+      )}
+
+      {activeTab === "form" && (
+        <AchieversForm 
+           initialData={editingItem} 
+           onSave={handleSave} 
+           onCancel={handleCancel} 
+        />
+      )}
+    </Container>
   );
 }
