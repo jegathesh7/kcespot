@@ -1,8 +1,26 @@
 import { useState } from "react";
-import { Table, Badge, Button, Image, Modal, Form } from "react-bootstrap";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import {
+  Table,
+  Badge,
+  Button,
+  Image,
+  Modal,
+  Form,
+  Pagination,
+} from "react-bootstrap";
+import VisibilityIcon from "@mui/icons-material/VisibilityOutlined";
+import FileDownloadIcon from "@mui/icons-material/FileDownloadOutlined";
+import EditIcon from "@mui/icons-material/EditOutlined";
+import DeleteIcon from "@mui/icons-material/DeleteOutline";
+import SearchIcon from "@mui/icons-material/Search";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import { Tooltip } from "@mui/material";
+// Reaction Icons
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import CelebrationIcon from "@mui/icons-material/Celebration";
+import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
+
 import TablePlaceholder from "../../component/TablePlaceholder";
 export default function AchieversTable({
   data,
@@ -10,6 +28,15 @@ export default function AchieversTable({
   onEdit,
   onDelete,
   onStatusToggle,
+  currentPage,
+  totalPages,
+  onPageChange,
+  searchTerm,
+  onSearchChange,
+  filterCollege,
+  onFilterChange,
+  onExportExcel,
+  onExportPDF,
 }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -23,6 +50,8 @@ export default function AchieversTable({
   const [showModal, setShowModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedTitle, setSelectedTitle] = useState("");
+
+  // Logic moved to parent component (Server-side pagination)
 
   const handleViewImage = (title, imageUrl) => {
     setSelectedTitle(title);
@@ -65,121 +94,300 @@ export default function AchieversTable({
   };
 
   if (loading) {
-    return <TablePlaceholder/>
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <div className="text-center p-5 text-muted">No achievements found.</div>
-    );
+    return <TablePlaceholder />;
   }
 
   return (
     <>
-      <div className="table-responsive bg-white rounded shadow-sm border">
-        <Table hover className="mb-0 align-middle">
-          <thead className="bg-light">
+      {/* Professional Toolbar */}
+      <div className="toolbar-card d-flex flex-column flex-lg-row align-items-center justify-content-between gap-3">
+        {/* Search Bar */}
+        <div className="position-relative w-100" style={{ maxWidth: "450px" }}>
+          <div className="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted">
+            <SearchIcon style={{ fontSize: "20px" }} />
+          </div>
+          <Form.Control
+            type="text"
+            placeholder="Search by name"
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="search-input ps-5 py-2" // using new CSS class
+          />
+        </div>
+
+        {/* Actions Group */}
+        <div className="d-flex align-items-center gap-3 w-100 w-lg-auto justify-content-end flex-wrap">
+          {/* Filter */}
+          <div className="d-flex align-items-center gap-2">
+            <span
+              className="text-muted small fw-bold d-none d-md-block"
+              style={{ fontSize: "0.75rem", letterSpacing: "0.05em" }}
+            >
+              COLLEGE:
+            </span>
+            <Form.Select
+              value={filterCollege}
+              onChange={(e) => onFilterChange(e.target.value)}
+              className="filter-select py-2 ps-3 pe-5"
+              style={{ width: "auto", minWidth: "140px" }}
+            >
+              <option value="">All Campuses</option>
+              <option value="KCE">KCE</option>
+              <option value="KIT">KIT</option>
+              <option value="KAHE">KAHE</option>
+            </Form.Select>
+          </div>
+
+          <div
+            className="vr h-100 mx-1 border-secondary opacity-25 d-none d-md-block"
+            style={{ minHeight: "24px" }}
+          ></div>
+
+          {/* Exports */}
+          <div className="d-flex gap-2">
+            <button
+              onClick={onExportExcel}
+              className="export-btn export-btn-excel border-0"
+            >
+              <FileDownloadIcon fontSize="small" /> <span>Excel</span>
+            </button>
+            <button
+              onClick={onExportPDF}
+              className="export-btn export-btn-pdf border-0"
+            >
+              <FileDownloadIcon fontSize="small" /> <span>PDF</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="modern-card table-responsive">
+        <Table className="custom-table mb-0 align-middle">
+          <thead>
             <tr>
-              <th className="py-3 ps-4 text-secondary small text-uppercase fw-bold">
-                Achievement Info
+              <th className="ps-4" style={{ width: "30%" }}>
+                Achievement Details
               </th>
-              <th className="py-3 text-secondary small text-uppercase fw-bold">
-                Batch
-              </th>
-              <th className="py-3 text-secondary small text-uppercase fw-bold">
-                Category
-              </th>
-              <th className="py-3 text-secondary small text-uppercase fw-bold">
+              <th style={{ width: "10%" }}>College</th>
+              <th style={{ width: "10%" }}>Year</th>
+              <th style={{ width: "10%" }}>Category</th>
+              <th style={{ width: "20%" }}>Reactions</th>
+              <th className="text-center" style={{ width: "10%" }}>
                 Evidence
               </th>
-              <th className="py-3 text-secondary small text-uppercase fw-bold text-center">
+              <th className="text-center" style={{ width: "10%" }}>
                 Status
               </th>
-              <th className="py-3 pe-4 text-end text-secondary small text-uppercase fw-bold">
-                Action
+              <th className="text-end pe-4" style={{ width: "5%" }}>
+                Actions
               </th>
             </tr>
           </thead>
           <tbody>
-            {data.map((a) => (
-              <tr key={a._id}>
-                <td className="ps-4">
-                  {a.college && (
-                    <Badge bg="light" className="text-primary border mb-1">
-                      {a.college}
-                    </Badge>
-                  )}
-                  <div className="fw-bold text-dark">{a.name}</div>
-                  {a.eventDate && (
-                    <div className="small text-muted">
-                      {new Date(a.eventDate).toLocaleDateString()}
+            {data && data.length > 0 ? (
+              data.map((a) => (
+                <tr key={a._id}>
+                  <td className="ps-4">
+                    <div className="profile-cell-container">
+                      <div className="profile-info">
+                        <span
+                          className="profile-name text-truncate"
+                          style={{ maxWidth: "300px" }}
+                          title={a.name}
+                        >
+                          {a.name}
+                        </span>
+                        <span className="profile-subtitle">
+                          {a.eventDate
+                            ? new Date(a.eventDate).toLocaleDateString(
+                                undefined,
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                },
+                              )
+                            : "No Date"}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </td>
-                <td className="text-secondary small fw-medium">{a.batch}</td>
-                <td>
-                  <Badge bg="info" className="text-white bg-opacity-75">
-                    {a.category}
-                  </Badge>
-                </td>
-                <td>
-                  {a.posterImage ? (
-                    <Button
-                      variant="light"
-                      size="sm"
-                      className="text-secondary border-0"
-                      onClick={() => handleViewImage(a.name, a.posterImage)}
-                      title="View Poster"
-                    >
-                      <VisibilityIcon fontSize="small" />
-                    </Button>
-                  ) : (
-                    <span className="text-muted small italic">No Image</span>
-                  )}
-                </td>
-                <td className="text-center">
-                  <div className="d-flex justify-content-center align-items-center gap-2">
-                    <Form.Check
-                      type="switch"
-                      id={`status-${a._id}`}
-                      checked={a.status}
-                      onChange={() => handleStatusClick(a)}
-                      className="custom-switch"
-                      style={{ cursor: "pointer" }}
-                    />
-                    <Badge
-                      bg={a.status ? "success" : "secondary"}
-                      pill
-                      className="text-uppercase"
-                      style={{ fontSize: "0.7rem", minWidth: "60px" }}
-                    >
-                      {a.status ? "Active" : "Closed"}
-                    </Badge>
+                  </td>
+                  <td>
+                    {a.college ? (
+                      <span
+                        className={`modern-badge ${getBadgeClassOfCollege(a.college)}`}
+                      >
+                        {a.college}
+                      </span>
+                    ) : (
+                      <span className="text-muted">-</span>
+                    )}
+                  </td>
+                  <td>
+                    <span className="fw-medium text-dark">{a.batch}</span>
+                  </td>
+                  <td>
+                    <span className="modern-badge badge-category">
+                      {a.category}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="d-flex align-items-center gap-3">
+                      {/* Like */}
+                      <div
+                        className="d-flex align-items-center gap-1 text-muted small"
+                        title="Likes"
+                      >
+                        <ThumbUpIcon
+                          style={{ fontSize: "16px", color: "#64748b" }}
+                        />
+                        <span className="fw-semibold">
+                          {a.reactions?.like || 0}
+                        </span>
+                      </div>
+                      {/* Heart */}
+                      <div
+                        className="d-flex align-items-center gap-1 text-muted small"
+                        title="Hearts"
+                      >
+                        <FavoriteIcon
+                          style={{ fontSize: "16px", color: "#ef4444" }}
+                        />
+                        <span className="fw-semibold">
+                          {a.reactions?.heart || 0}
+                        </span>
+                      </div>
+                      {/* Clap */}
+                      <div
+                        className="d-flex align-items-center gap-1 text-muted small"
+                        title="Claps"
+                      >
+                        <CelebrationIcon
+                          style={{ fontSize: "16px", color: "#eab308" }}
+                        />
+                        <span className="fw-semibold">
+                          {a.reactions?.clap || 0}
+                        </span>
+                      </div>
+                      {/* Fire */}
+                      <div
+                        className="d-flex align-items-center gap-1 text-muted small"
+                        title="Fire"
+                      >
+                        <LocalFireDepartmentIcon
+                          style={{ fontSize: "16px", color: "#f97316" }}
+                        />
+                        <span className="fw-semibold">
+                          {a.reactions?.fire || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-center">
+                    {a.posterImage ? (
+                      <Tooltip title="View Evidence">
+                        <Button
+                          variant="light"
+                          className="action-btn mx-auto"
+                          onClick={() => handleViewImage(a.name, a.posterImage)}
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </Button>
+                      </Tooltip>
+                    ) : (
+                      <span className="text-muted small">-</span>
+                    )}
+                  </td>
+                  <td className="text-center">
+                    <div className="status-wrapper">
+                      <Form.Check
+                        type="switch"
+                        id={`status-${a._id}`}
+                        checked={a.status}
+                        onChange={() => handleStatusClick(a)}
+                        style={{
+                          cursor: "pointer",
+                          margin: 0,
+                          minHeight: "auto",
+                        }}
+                      />
+                      <span
+                        className={`status-label ${a.status ? "text-success" : "text-secondary"}`}
+                      >
+                        {a.status ? "Active" : "Closed"}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="pe-4 text-end">
+                    <div className="d-flex justify-content-end gap-1">
+                      <Tooltip title="Edit" className="text-primary">
+                        <button
+                          className="action-btn edit"
+                          onClick={() => onEdit(a)}
+                        >
+                          <EditIcon fontSize="small" />
+                        </button>
+                      </Tooltip>
+                      <Tooltip title="Delete" className="text-danger">
+                        <button
+                          className="action-btn delete"
+                          onClick={() => handleDeleteClick(a._id, a.name)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </button>
+                      </Tooltip>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" className="text-center py-5">
+                  <div className="d-flex flex-column align-items-center justify-content-center p-4">
+                    <div className="bg-light rounded-circle p-3 mb-3">
+                      <SearchIcon
+                        className="text-secondary opacity-50"
+                        style={{ fontSize: "32px" }}
+                      />
+                    </div>
+                    <h6 className="text-secondary fw-bold mb-1">
+                      No achievements found
+                    </h6>
+                    <p className="text-muted small mb-0">
+                      Try adjusting your search or filters.
+                    </p>
                   </div>
                 </td>
-                <td className="pe-4 text-end">
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="text-primary p-0 me-3"
-                    onClick={() => onEdit(a)}
-                  >
-                    <EditIcon fontSize="small" />
-                  </Button>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="text-danger p-0"
-                    onClick={() => handleDeleteClick(a._id, a.name)}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </Button>
-                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="d-flex justify-content-center mt-4">
+          <Pagination className="shadow-sm">
+            <Pagination.Prev
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            />
+            {[...Array(totalPages)].map((_, i) => (
+              <Pagination.Item
+                key={i + 1}
+                active={i + 1 === currentPage}
+                onClick={() => onPageChange(i + 1)}
+              >
+                {i + 1}
+              </Pagination.Item>
+            ))}
+            <Pagination.Next
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            />
+          </Pagination>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       <Modal
@@ -264,6 +472,37 @@ export default function AchieversTable({
       </Modal>
     </>
   );
+}
+
+// Helper to get color for avatar background
+function getColorForCollege(college) {
+  if (!college) return "#bdbdbd";
+  switch (college.toUpperCase()) {
+    case "KCE":
+      return "#1976d2"; // Blue
+    case "KIT":
+      return "#ed6c02"; // Orange
+    case "KAHE":
+      return "#2e7d32"; // Green
+    default:
+      return "#9c27b0";
+  }
+}
+
+// Helper for badge class
+function getBadgeClassOfCollege(college) {
+  if (!college) return "bg-light text-dark"; // fallback
+  // Matches the CSS class names defined in achievers.css
+  switch (college.toUpperCase()) {
+    case "KCE":
+      return "badge-college-kce";
+    case "KIT":
+      return "badge-college-kit";
+    case "KAHE":
+      return "badge-college-kahe";
+    default:
+      return "badge-category";
+  }
 }
 
 // Helper to fix Google Drive image links for embedding
