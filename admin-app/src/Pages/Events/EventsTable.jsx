@@ -448,11 +448,11 @@ function getBadgeClassOfCollege(college) {
 
 function formatImageUrl(url) {
   if (!url) return "";
-  if (url.includes("drive.google.com") || url.includes("docs.google.com")) {
-    let id = "";
-    const parts = url.match(/\/d\/(.*?)\/|id=(.*?)(&|$)/);
-    if (parts) id = parts[1] || parts[2];
-    if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
+
+  if (!url.startsWith("http") && !url.startsWith("https")) {
+    const cleanPath = url.replace(/\\/g, "/");
+    return `http://localhost:5000/${cleanPath}`;
   }
+
   return url;
 }

@@ -449,27 +449,40 @@ export default function AchieversTable({
       </Modal>
 
       {/* Image Preview Modal */}
-      <Modal show={showModal} onHide={handleCloseModal} centered>
-        <Modal.Header closeButton>
-          <Modal.Title className="h6">{selectedTitle}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="text-center p-0">
-          {selectedImage ? (
-            <img
-              src={formatImageUrl(selectedImage)}
-              alt={selectedTitle}
-              style={{
-                width: "100%",
-                height: "auto",
-                maxHeight: "80vh",
-                objectFit: "contain",
-              }}
-            />
-          ) : (
-            <p className="p-4 text-muted">No Image Available</p>
-          )}
-        </Modal.Body>
-      </Modal>
+      {showModal && (
+        <div
+          className="modal show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          onClick={handleCloseModal}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="modal-content border-0 shadow-lg overflow-hidden"
+              style={{ borderRadius: "16px" }}
+            >
+              <div className="modal-body p-0 position-relative">
+                <button
+                  className="btn btn-close position-absolute top-0 end-0 m-3 bg-white shadow-sm"
+                  onClick={handleCloseModal}
+                  style={{ opacity: 1, zIndex: 10 }}
+                ></button>
+                <img
+                  src={formatImageUrl(selectedImage)}
+                  alt={selectedTitle}
+                  className="w-100 d-block"
+                  style={{ maxHeight: "80vh", objectFit: "contain" }}
+                />
+                <div className="p-3 bg-white text-center">
+                  <h6 className="fw-bold mb-0">{selectedTitle}</h6>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -504,25 +517,12 @@ function getBadgeClassOfCollege(college) {
       return "badge-category";
   }
 }
-
-// Helper to fix Google Drive image links for embedding
 function formatImageUrl(url) {
   if (!url) return "";
 
-  // Check if it is a Google Drive link
-  if (url.includes("drive.google.com") || url.includes("docs.google.com")) {
-    // Try to extract the ID
-    let id = "";
-    const parts = url.match(/\/d\/(.*?)\/|id=(.*?)(&|$)/);
-
-    if (parts) {
-      id = parts[1] || parts[2];
-    }
-
-    if (id) {
-      // Return a thumbnail URL which is more reliable for embedding (sz=w1000 requests a large 1000px wide image)
-      return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
-    }
+  if (!url.startsWith("http") && !url.startsWith("https")) {
+    const cleanPath = url.replace(/\\/g, "/");
+    return `http://localhost:5000/${cleanPath}`;
   }
 
   return url;

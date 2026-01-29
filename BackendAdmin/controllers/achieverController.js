@@ -3,7 +3,30 @@ const Achiever = require("../models/Achiever");
 // CREATE
 exports.createAchiever = async (req, res) => {
   try {
-    const achiever = new Achiever(req.body);
+    const entryData = { ...req.body };
+    
+    // Parse students if it's a string (from FormData)
+    if (typeof entryData.students === 'string') {
+      entryData.students = JSON.parse(entryData.students);
+    }
+
+    // Handle File Uploads (Poster + Student Images)
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+        if (file.fieldname === "posterImage") {
+          entryData.posterImage = file.path;
+        } else if (file.fieldname.startsWith("studentImage_")) {
+          // Extract index from fieldname "studentImage_0", "studentImage_1", etc.
+          const index = parseInt(file.fieldname.split("_")[1]);
+          if (entryData.students && entryData.students[index]) {
+            entryData.students[index].imageUrl = file.path;
+          }
+        }
+      });
+    }
+    
+
+    const achiever = new Achiever(entryData);
     await achiever.save();
     res.status(201).json({ message: "Achiever saved", achiever });
   } catch (err) {
@@ -53,10 +76,37 @@ exports.getAchievers = async (req, res) => {
 exports.updateAchiever = async (req, res) => {
   try {
     const { id } = req.params;
+    const updateData = { ...req.body };
+
+
+
+    // Parse students if it's a string
+    if (typeof updateData.students === 'string') {
+        updateData.students = JSON.parse(updateData.students);
+    }
+
+    // Handle File Uploads (Poster + Student Images)
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+        if (file.fieldname === "posterImage") {
+          updateData.posterImage = file.path;
+        } else if (file.fieldname.startsWith("studentImage_")) {
+          const index = parseInt(file.fieldname.split("_")[1]);
+          if (updateData.students && updateData.students[index]) {
+            updateData.students[index].imageUrl = file.path;
+          }
+        }
+      });
+    }
+
+    // Parse students if it's a string
+    if (typeof updateData.students === 'string') {
+      updateData.students = JSON.parse(updateData.students);
+    }
 
     const updatedAchiever = await Achiever.findByIdAndUpdate(
       id,
-      req.body,
+      updateData,
       { new: true } // return updated document
     );
 

@@ -12,6 +12,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Make uploads folder static
+app.use("/uploads", express.static("uploads"));
+
+
 
 app.use("/api/events", require("./routes/eventRoutes"));
 app.use("/api/achievers", require("./routes/achieverRoutes"));
