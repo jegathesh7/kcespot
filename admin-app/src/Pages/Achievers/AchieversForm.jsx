@@ -100,23 +100,42 @@ const AchieversForm = forwardRef(
       if (!form.description.trim())
         newErrors.description = "Description is required";
 
-      if (entryType === "image" && !form.posterImage.trim()) {
-        newErrors.evidence = "Poster Image URL is required";
+      // URL Validation Regex
+      const urlPattern =
+        /^(https?:\/\/)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$/;
+
+      if (entryType === "image") {
+        if (!form.posterImage.trim()) {
+          newErrors.posterImage = "Poster Image URL is required";
+        } else if (!urlPattern.test(form.posterImage)) {
+          newErrors.posterImage = "Please enter a valid URL";
+        }
       }
 
       if (entryType === "manual") {
         if (studentCount <= 0) {
+          newErrors.studentCount = "Value should not be zero";
           newErrors.evidence = "Please add at least one student";
         } else {
-          // Check for empty required fields in students array
-          const invalidStudents = form.students.some(
-            (s) => !s.name.trim() || !s.year.trim() || !s.dept.trim(),
-          );
+          // Validate students
+          let hasStudentIssues = false;
+          // We'll use a specific object to track row-level errors if needed,
+          // but for now relying on checking values + a global 'submit attempted' flag or similar is common.
+          // However, to be precise as requested, let's verify each student.
+
+          const invalidStudents = form.students.some((s) => {
+            const nameInvalid = !s.name.trim();
+            const yearInvalid = !s.year.trim();
+            const deptInvalid = !s.dept.trim();
+            const urlInvalid =
+              s.imageUrl && s.imageUrl.trim() && !urlPattern.test(s.imageUrl);
+
+            return nameInvalid || yearInvalid || deptInvalid || urlInvalid;
+          });
 
           if (invalidStudents) {
-            newErrors.evidence =
-              "Please fill all required fields (Name, Year, Dept) for all students";
-            newErrors.studentErrors = true; // Flag to highlight inputs
+            newErrors.evidence = "Please fill all required fields correctly";
+            newErrors.studentErrors = true; // Flag to trigger row-level visual feedback
           }
         }
       }
@@ -356,10 +375,14 @@ const AchieversForm = forwardRef(
                       value={form.posterImage}
                       onChange={handleChange}
                       placeholder="https://..."
+                      isInvalid={!!errors.posterImage}
                       className="shadow-none"
                       style={{ borderRadius: "6px" }}
                     />
-                    {form.posterImage && (
+                    <Form.Control.Feedback type="invalid">
+                      {errors.posterImage}
+                    </Form.Control.Feedback>
+                    {form.posterImage && !errors.posterImage && (
                       <div className="mt-3 p-2 border rounded bg-light d-inline-block">
                         <img
                           src={formatImageUrl(form.posterImage)}
@@ -378,15 +401,19 @@ const AchieversForm = forwardRef(
                       <Form.Label>Number of Students</Form.Label>
                       <Form.Control
                         type="number"
-                        min="1"
-                        value={studentCount || ""}
+                        min="0"
+                        value={studentCount}
                         onChange={(e) =>
                           handleStudentCount(Number(e.target.value))
                         }
                         placeholder="e.g. 5"
+                        isInvalid={!!errors.studentCount}
                         className="shadow-none"
                         style={{ maxWidth: "150px", borderRadius: "6px" }}
                       />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.studentCount}
+                      </Form.Control.Feedback>
                     </Form.Group>
 
                     {form.students.length > 0 && (
@@ -485,6 +512,14 @@ const AchieversForm = forwardRef(
                                           index,
                                           "imageUrl",
                                           e.target.value,
+                                        )
+                                      }
+                                      isInvalid={
+                                        errors.studentErrors &&
+                                        student.imageUrl &&
+                                        student.imageUrl.trim() !== "" &&
+                                        !/^(https?:\/\/)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$/.test(
+                                          student.imageUrl,
                                         )
                                       }
                                       className="border-0 bg-transparent"
