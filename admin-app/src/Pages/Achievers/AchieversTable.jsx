@@ -3,7 +3,7 @@ import { Table, Badge, Button, Image, Modal, Form } from "react-bootstrap";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-
+import TablePlaceholder from "../../component/TablePlaceholder";
 export default function AchieversTable({
   data,
   loading,
@@ -65,14 +65,7 @@ export default function AchieversTable({
   };
 
   if (loading) {
-    return (
-      <div className="text-center p-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="mt-2 text-muted">Loading achievements...</p>
-      </div>
-    );
+    return <TablePlaceholder/>
   }
 
   if (!data || data.length === 0) {
