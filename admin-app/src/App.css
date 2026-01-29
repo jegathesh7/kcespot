@@ -26,7 +26,7 @@ nav.navbar {
   top: 80px;
   left: 0;
   bottom: 0;
-  width: 240px;
+  width: 200px;
   background-color: #fff;
   z-index: 1020;
   overflow-y: auto;
@@ -34,10 +34,10 @@ nav.navbar {
 }
 
 .page-content-wrapper {
-  margin-left: 240px; /* Push content right */
+  margin-left: 200px; /* Exact sidebar width */
   flex-grow: 1;
   padding: 2rem;
-  width: calc(100% - 240px); /* Ensure full width usage */
+  width: calc(100% - 200px); /* Ensure accurate full width usage without overflow */
 }
 
 .sidebar-link {
@@ -49,12 +49,12 @@ nav.navbar {
 
 .sidebar-link:hover {
   background-color: #f8f9fa;
-  color: #0d6efd;
+  color: #f3773a;
 }
 
 .sidebar-link.active {
   background-color: #e7f1ff;
-  color: #0d6efd;
+  color: #f66c0b;
   font-weight: 600;
   border-right: 3px solid #0d6efd; /* Blue line at the end */
   border-radius: 4px 0 0 4px !important; /* Rounded only on left */

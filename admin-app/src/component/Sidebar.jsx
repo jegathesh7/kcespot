@@ -6,10 +6,10 @@ function Sidebar() {
   return (
     <div className="sidebar bg-white border-end h-100 pt-3">
         <Nav className="flex-column gap-2 px-2">
-            <Nav.Link as={NavLink} to="/achievers" className="sidebar-link d-flex align-items-center gap-2 px-3 py-2 rounded text-decoration-none">
+            <Nav.Link as={NavLink} to="/achievers" className="sidebar-link d-flex align-items-center gap-2 px-2 py-2 rounded text-decoration-none">
                  <span className="fw-medium">Achievers</span>
             </Nav.Link>
-            <Nav.Link as={NavLink} to="/events" className="sidebar-link d-flex align-items-center gap-2 px-3 py-2 rounded text-decoration-none">
+            <Nav.Link as={NavLink} to="/events" className="sidebar-link d-flex align-items-center gap-2 px-2 py-2 rounded text-decoration-none">
                  <span className="fw-medium">Events</span>
             </Nav.Link>
             <Nav.Link as={NavLink} to="/users" className="sidebar-link d-flex align-items-center gap-2 px-3 py-2 rounded text-decoration-none">

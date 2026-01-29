@@ -11,11 +11,36 @@ export const createEvent = async (req, res) => {
   }
 };
 
-// GET all events
+// GET all events with Pagination, Search, and Filter
 export const getEvents = async (req, res) => {
   try {
-    const events = await Event.find({ isDeleted: { $ne: true } }).sort({ createdAt: -1 });
-    res.json(events);
+    const { page = 1, limit = 10, search = "", campus = "" } = req.query;
+
+    const query = { isDeleted: false };
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { campus: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (campus) {
+      query.campus = { $regex: `^${campus}$`, $options: "i" };
+    }
+
+    const count = await Event.countDocuments(query);
+    const events = await Event.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    res.json({
+      data: events,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+      totalEvents: count,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

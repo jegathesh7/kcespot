@@ -151,12 +151,12 @@ export default function AchieversTable({
             >
               <FileDownloadIcon fontSize="small" /> <span>Excel</span>
             </button>
-            <button
+            {/* <button
               onClick={onExportPDF}
               className="export-btn export-btn-pdf border-0"
             >
               <FileDownloadIcon fontSize="small" /> <span>PDF</span>
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
