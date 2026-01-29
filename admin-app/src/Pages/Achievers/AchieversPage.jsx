@@ -29,59 +29,71 @@ export default function AchieversPage() {
       setEditingItem(null);
       loadData();
     } catch (error) {
-       console.error("Failed to save achievement", error);
-       alert("Failed to save achievement");
+      console.error("Failed to save achievement", error);
+      alert("Failed to save achievement");
     }
   };
 
   const handleEdit = (row) => {
-    setEditAchiever(row);
-    setShowForm(true);
+    setEditingItem(row);
+    setActiveTab("form");
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Delete this achiever?")) {
-      await api.delete(`/achievers/${id}`);
-      
-      loadData();
-    }
+    await api.delete(`/achievers/${id}`);
+    loadData();
   };
-   const handleCancel = () => {
+  const handleCancel = () => {
     setActiveTab("list");
     setEditingItem(null);
   };
 
   return (
-     <Container className="py-4">
+    <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
         <div>
-           <h2 className="fw-bold text-primary mb-0">Achievers Management</h2>
-           <p className="text-muted small mb-0">Record and manage student achievements</p>
+          <h2 className="fw-bold text-primary mb-0">Achievers Management</h2>
+          <p className="text-muted small mb-0">
+            Record and manage student achievements
+          </p>
         </div>
       </div>
 
-      <Nav variant="tabs" className="mb-4" activeKey={activeTab} onSelect={(k) => {
+      <Nav
+        variant="tabs"
+        className="mb-4"
+        activeKey={activeTab}
+        onSelect={(k) => {
           setActiveTab(k);
           if (k === "list") setEditingItem(null);
           else if (k === "form" && !editingItem) setEditingItem(null);
-      }}>
+        }}
+      >
         <Nav.Item>
-          <Nav.Link eventKey="list" className="fw-bold px-4">View List</Nav.Link>
+          <Nav.Link eventKey="list" className="fw-bold px-4">
+            View List
+          </Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="form" className="fw-bold px-4">{editingItem ? "Edit Entry" : "Add New"}</Nav.Link>
+          <Nav.Link eventKey="form" className="fw-bold px-4">
+            {editingItem ? "Edit Entry" : "Add New"}
+          </Nav.Link>
         </Nav.Item>
       </Nav>
 
       {activeTab === "list" && (
-        <AchieversTable data={data} onEdit={handleEdit} onDelete={handleDelete} />
+        <AchieversTable
+          data={data}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       )}
 
       {activeTab === "form" && (
-        <AchieversForm 
-           initialData={editingItem} 
-           onSave={handleSave} 
-           onCancel={handleCancel} 
+        <AchieversForm
+          initialData={editingItem}
+          onSave={handleSave}
+          onCancel={handleCancel}
         />
       )}
     </Container>

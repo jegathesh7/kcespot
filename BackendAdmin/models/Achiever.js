@@ -19,6 +19,7 @@ const achieverSchema = new mongoose.Schema(
     eventDate: Date,
     posterImage: String,
     students: [studentSchema],
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

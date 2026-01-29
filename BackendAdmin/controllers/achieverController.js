@@ -14,7 +14,7 @@ exports.createAchiever = async (req, res) => {
 // READ (ALL)
 exports.getAchievers = async (req, res) => {
   try {
-    const achievers = await Achiever.find().sort({ createdAt: -1 });
+    const achievers = await Achiever.find({ isDeleted: false }).sort({ createdAt: -1 });
     res.json(achievers);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -45,18 +45,23 @@ exports.updateAchiever = async (req, res) => {
   }
 };
 
-// DELETE
+// DELETE (Soft Delete)
 exports.deleteAchiever = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deletedAchiever = await Achiever.findByIdAndDelete(id);
+    // Use findByIdAndUpdate to soft delete
+    const deletedAchiever = await Achiever.findByIdAndUpdate(
+      id,
+      { isDeleted: true },
+      { new: true }
+    );
 
     if (!deletedAchiever) {
       return res.status(404).json({ message: "Achiever not found" });
     }
 
-    res.json({ message: "Achiever deleted successfully" });
+    res.json({ message: "Achiever deleted successfully (Soft Delete)" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
