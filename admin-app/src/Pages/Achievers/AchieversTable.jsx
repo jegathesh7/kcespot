@@ -5,6 +5,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
 export default function AchieversTable({ data, onEdit, onDelete }) {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteName, setDeleteName] = useState("");
+
+  // Image Modal State
   const [showModal, setShowModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedTitle, setSelectedTitle] = useState("");
@@ -19,6 +24,21 @@ export default function AchieversTable({ data, onEdit, onDelete }) {
     setShowModal(false);
     setSelectedImage("");
     setSelectedTitle("");
+  };
+
+  const handleDeleteClick = (id, name) => {
+    setDeleteId(id);
+    setDeleteName(name);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteId) {
+      onDelete(deleteId); // Pass ID to parent handler
+      setShowDeleteModal(false);
+      setDeleteId(null);
+      setDeleteName("");
+    }
   };
 
   if (!data || data.length === 0) {
@@ -103,7 +123,7 @@ export default function AchieversTable({ data, onEdit, onDelete }) {
                     variant="link"
                     size="sm"
                     className="text-danger p-0"
-                    onClick={() => onDelete(a._id)}
+                    onClick={() => handleDeleteClick(a._id, a.name)}
                   >
                     <DeleteIcon fontSize="small" />
                   </Button>
@@ -113,6 +133,29 @@ export default function AchieversTable({ data, onEdit, onDelete }) {
           </tbody>
         </Table>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title className="h6 text-danger">Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete the achievement record for{" "}
+          <strong>{deleteName}</strong>?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="light" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleConfirmDelete}>
+            Delete Item
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Image Preview Modal */}
       <Modal show={showModal} onHide={handleCloseModal} centered>
