@@ -12,6 +12,9 @@ function Sidebar() {
             <Nav.Link as={NavLink} to="/events" className="sidebar-link d-flex align-items-center gap-2 px-3 py-2 rounded text-decoration-none">
                  <span className="fw-medium">Events</span>
             </Nav.Link>
+            <Nav.Link as={NavLink} to="/users" className="sidebar-link d-flex align-items-center gap-2 px-3 py-2 rounded text-decoration-none">
+                 <span className="fw-medium">Users</span>
+            </Nav.Link>
         </Nav>
     </div>
   );
