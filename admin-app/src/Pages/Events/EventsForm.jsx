@@ -26,17 +26,17 @@ export default function EventsForm({ onSave }) {
 
   const submit = (e) => {
     e.preventDefault();
-    const fd = new FormData();
-    Object.keys(form).forEach((key) => fd.append(key, form[key]));
-    onSave(fd);
+   // const fd = new FormData();
+    //Object.keys(form).forEach((key) => fd.append(key, form[key]));
+    onSave(form);
   };
 
   return (
     <form className="inline-form" onSubmit={submit}>
       <input name="title" placeholder="Event Title" onChange={handleChange} required />
 
-      <input type="date" name="startDate" onChange={handleChange} />
-      <input type="date" name="endDate" onChange={handleChange} />
+      <input type="date" name="startDate" placeholder="Start Date" onChange={handleChange} />
+      <input type="date" name="endDate" placeholder="End Date" onChange={handleChange} />
 
       <input name="campus" placeholder="Campus" onChange={handleChange} />
       <input name="venue" placeholder="Venue" onChange={handleChange} />
