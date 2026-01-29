@@ -3,7 +3,11 @@ import Event from "../models/Event.js";
 // CREATE event
 export const createEvent = async (req, res) => {
   try {
-    const event = new Event(req.body);
+    const entryData = { ...req.body };
+    if (req.file) {
+      entryData.eventImage = req.file.path; // Store file path
+    }
+    const event = new Event(entryData);
     await event.save();
     res.status(201).json({ message: "Event saved", event });
   } catch (err) {
@@ -50,10 +54,15 @@ export const getEvents = async (req, res) => {
 export const updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
+    const updateData = { ...req.body };
+
+    if (req.file) {
+      updateData.eventImage = req.file.path;
+    }
 
     const updated = await Event.findByIdAndUpdate(
       id,
-      req.body,
+      updateData,
       { new: true }
     );
 

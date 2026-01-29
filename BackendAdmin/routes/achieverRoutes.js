@@ -3,9 +3,11 @@ const router = express.Router();
 const { createAchiever, getAchievers, updateAchiever,deleteAchiever } = require("../controllers/achieverController");
 
 
-router.post("/", createAchiever);
+const upload = require("../middleware/upload");
+
+router.post("/", upload.any(), createAchiever);
 router.get("/", getAchievers);
-router.put("/:id", updateAchiever);
+router.put("/:id", upload.any(), updateAchiever);
 router.delete("/:id", deleteAchiever);
 
 
