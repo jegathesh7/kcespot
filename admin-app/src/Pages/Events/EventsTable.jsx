@@ -1,13 +1,31 @@
 import { useState } from "react";
-import { Table, Badge, Button, Modal } from "react-bootstrap";
+import {
+  Table,
+  Badge,
+  Button,
+  Modal,
+  Form,
+  Placeholder,
+} from "react-bootstrap";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-
-export default function EventsTable({ data, onEdit, onDelete }) {
+import TablePlaceholder from "../../component/TablePlaceholder";
+export default function EventsTable({
+  data,
+  loading,
+  onEdit,
+  onDelete,
+  onStatusToggle,
+}) {
   const [showModal, setShowModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedTitle, setSelectedTitle] = useState("");
+
+  // Delete Modal State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteTitle, setDeleteTitle] = useState("");
 
   const handleViewImage = (title, imageUrl) => {
     setSelectedTitle(title);
@@ -20,6 +38,25 @@ export default function EventsTable({ data, onEdit, onDelete }) {
     setSelectedImage("");
     setSelectedTitle("");
   };
+
+  const handleDeleteClick = (id, title) => {
+    setDeleteId(id);
+    setDeleteTitle(title);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteId) {
+      onDelete(deleteId);
+      setShowDeleteModal(false);
+      setDeleteId(null);
+      setDeleteTitle("");
+    }
+  };
+
+  if (loading) {
+    return <TablePlaceholder />
+  }
 
   if (!data || data.length === 0) {
     return <div className="text-center p-5 text-muted">No events found.</div>;
@@ -94,9 +131,19 @@ export default function EventsTable({ data, onEdit, onDelete }) {
                   <span className="small fw-medium">{e.visibility}</span>
                 </td>
                 <td className="text-center">
-                  <Badge bg={e.status ? "success" : "secondary"} pill>
-                    {e.status ? "Active" : "Inactive"}
-                  </Badge>
+                  <div className="d-flex justify-content-center align-items-center gap-2">
+                    <Form.Check
+                      type="switch"
+                      id={`status-${e._id}`}
+                      checked={e.status}
+                      onChange={() => onStatusToggle(e._id, e.status)}
+                      className="custom-switch"
+                      style={{ cursor: "pointer" }}
+                    />
+                    <Badge bg={e.status ? "success" : "secondary"} pill>
+                      {e.status ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
                 </td>
                 <td className="pe-4 text-end">
                   <Button
@@ -111,7 +158,7 @@ export default function EventsTable({ data, onEdit, onDelete }) {
                     variant="link"
                     size="sm"
                     className="text-danger p-0"
-                    onClick={() => onDelete(e._id)}
+                    onClick={() => handleDeleteClick(e._id, e.title)}
                   >
                     <DeleteIcon fontSize="small" />
                   </Button>
@@ -143,6 +190,29 @@ export default function EventsTable({ data, onEdit, onDelete }) {
             <p className="p-4 text-muted">No Image Available</p>
           )}
         </Modal.Body>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title className="h6 text-danger">Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete the event{" "}
+          <strong>{deleteTitle}</strong>?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="light" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleConfirmDelete}>
+            Delete Event
+          </Button>
+        </Modal.Footer>
       </Modal>
     </>
   );
