@@ -17,6 +17,7 @@ const eventSchema = new mongoose.Schema(
     status: Boolean,
     eventDate: Date,
     eventImage: String,
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true } 
 );
