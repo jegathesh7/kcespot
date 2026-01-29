@@ -12,6 +12,7 @@ const studentSchema = new mongoose.Schema({
 const achieverSchema = new mongoose.Schema(
   {
     name: String,
+    college: String,
     batch: String,
     category: String,
     description: String,

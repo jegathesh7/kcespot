@@ -1,13 +1,23 @@
 import { useState } from "react";
-import { Table, Badge, Button, Image, Modal } from "react-bootstrap";
+import { Table, Badge, Button, Image, Modal, Form } from "react-bootstrap";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
-export default function AchieversTable({ data, onEdit, onDelete }) {
+export default function AchieversTable({
+  data,
+  loading,
+  onEdit,
+  onDelete,
+  onStatusToggle,
+}) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [deleteName, setDeleteName] = useState("");
+
+  // Status Modal State
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusItem, setStatusItem] = useState(null);
 
   // Image Modal State
   const [showModal, setShowModal] = useState(false);
@@ -32,6 +42,19 @@ export default function AchieversTable({ data, onEdit, onDelete }) {
     setShowDeleteModal(true);
   };
 
+  const handleStatusClick = (item) => {
+    setStatusItem(item);
+    setShowStatusModal(true);
+  };
+
+  const confirmStatusToggle = () => {
+    if (statusItem) {
+      onStatusToggle(statusItem._id, statusItem.status);
+      setShowStatusModal(false);
+      setStatusItem(null);
+    }
+  };
+
   const handleConfirmDelete = () => {
     if (deleteId) {
       onDelete(deleteId); // Pass ID to parent handler
@@ -40,6 +63,17 @@ export default function AchieversTable({ data, onEdit, onDelete }) {
       setDeleteName("");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="text-center p-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-2 text-muted">Loading achievements...</p>
+      </div>
+    );
+  }
 
   if (!data || data.length === 0) {
     return (
@@ -77,6 +111,11 @@ export default function AchieversTable({ data, onEdit, onDelete }) {
             {data.map((a) => (
               <tr key={a._id}>
                 <td className="ps-4">
+                  {a.college && (
+                    <Badge bg="light" className="text-primary border mb-1">
+                      {a.college}
+                    </Badge>
+                  )}
                   <div className="fw-bold text-dark">{a.name}</div>
                   {a.eventDate && (
                     <div className="small text-muted">
@@ -106,9 +145,24 @@ export default function AchieversTable({ data, onEdit, onDelete }) {
                   )}
                 </td>
                 <td className="text-center">
-                  <Badge bg={a.status ? "success" : "secondary"} pill>
-                    {a.status ? "Active" : "Inactive"}
-                  </Badge>
+                  <div className="d-flex justify-content-center align-items-center gap-2">
+                    <Form.Check
+                      type="switch"
+                      id={`status-${a._id}`}
+                      checked={a.status}
+                      onChange={() => handleStatusClick(a)}
+                      className="custom-switch"
+                      style={{ cursor: "pointer" }}
+                    />
+                    <Badge
+                      bg={a.status ? "success" : "secondary"}
+                      pill
+                      className="text-uppercase"
+                      style={{ fontSize: "0.7rem", minWidth: "60px" }}
+                    >
+                      {a.status ? "Active" : "Closed"}
+                    </Badge>
+                  </div>
                 </td>
                 <td className="pe-4 text-end">
                   <Button
@@ -153,6 +207,42 @@ export default function AchieversTable({ data, onEdit, onDelete }) {
           </Button>
           <Button variant="danger" onClick={handleConfirmDelete}>
             Delete Item
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Status Update Modal */}
+      <Modal
+        show={showStatusModal}
+        onHide={() => setShowStatusModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title className="h6 fw-bold">Update Status</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            Current Status:{" "}
+            <strong
+              className={statusItem?.status ? "text-success" : "text-secondary"}
+            >
+              {statusItem?.status ? "Active" : "Closed"}
+            </strong>
+          </p>
+          <p className="mb-0">
+            Do you want to change the status to{" "}
+            <strong>{statusItem?.status ? "Closed" : "Active"}</strong>?
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="light" onClick={() => setShowStatusModal(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant={statusItem?.status ? "secondary" : "success"} // Color based on target action
+            onClick={confirmStatusToggle}
+          >
+            Mark as {statusItem?.status ? "Closed" : "Active"}
           </Button>
         </Modal.Footer>
       </Modal>
