@@ -138,7 +138,7 @@ export default function EventsPage() {
     <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
         <div>
-          <h2 className="fw-bold text-primary mb-0">Events Management</h2>
+          <h2 className="fw-bold color2 mb-0">Events Management</h2>
           <p className="text-muted small mb-0">
             Create and manage upcoming college events
           </p>
@@ -146,8 +146,8 @@ export default function EventsPage() {
       </div>
 
       <Nav
-        variant="tabs"
-        className="mb-4"
+        variant="pills"
+        className="modern-tabs mb-4"
         activeKey={activeTab}
         onSelect={handleTabSelect}
       >

@@ -11,11 +11,39 @@ exports.createAchiever = async (req, res) => {
   }
 };
 
-// READ (ALL)
+// READ (ALL) with Pagination and Search
 exports.getAchievers = async (req, res) => {
   try {
-    const achievers = await Achiever.find({ isDeleted: false }).sort({ createdAt: -1 });
-    res.json(achievers);
+    const { page = 1, limit = 10, search = "", college = "" } = req.query;
+
+    const query = { isDeleted: false };
+
+    if (search) {
+
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { college: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } } // Added description for completeness
+      ];
+    }
+
+    if (college) {
+      query.college = { $regex: `^${college}$`, $options: "i" };
+    }
+
+    const count = await Achiever.countDocuments(query);
+    
+    const achievers = await Achiever.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    res.json({
+      data: achievers,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+      totalItems: count,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
