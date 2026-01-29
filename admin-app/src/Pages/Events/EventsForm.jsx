@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function EventsForm({ onSave }) {
+export default function EventsForm({ onSave, initialData, onCancel }) {
   const [form, setForm] = useState({
     title: "",
     startDate: "",
@@ -16,6 +16,17 @@ export default function EventsForm({ onSave }) {
     eventDate: "",
   });
 
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        ...initialData,
+        startDate: initialData.startDate?.substring(0, 10) || "",
+        endDate: initialData.endDate?.substring(0, 10) || "",
+        eventDate: initialData.eventDate?.substring(0, 10) || "",
+      });
+    }
+  }, [initialData]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm({
@@ -26,55 +37,96 @@ export default function EventsForm({ onSave }) {
 
   const submit = (e) => {
     e.preventDefault();
-   // const fd = new FormData();
-    //Object.keys(form).forEach((key) => fd.append(key, form[key]));
     onSave(form);
   };
 
   return (
     <form className="inline-form" onSubmit={submit}>
-      <input name="title" placeholder="Event Title" onChange={handleChange} required />
+      {/* Text inputs */}
+      <input
+        name="title"
+        placeholder="Event Title"
+        value={form.title}
+        onChange={handleChange}
+        required
+      />
 
-      <input type="date" name="startDate" placeholder="Start Date" onChange={handleChange} />
-      <input type="date" name="endDate" placeholder="End Date" onChange={handleChange} />
+      <input
+        type="date"
+        name="startDate"
+        placeholder="Start Date"
+        value={form.startDate}
+        onChange={handleChange}
+      />
 
-      <input name="campus" placeholder="Campus" onChange={handleChange} />
-      <input name="venue" placeholder="Venue" onChange={handleChange} />
+      <input
+        type="date"
+        name="endDate"
+        placeholder="End Date"
+        value={form.endDate}
+        onChange={handleChange}
+      />
 
-      <select name="mode" onChange={handleChange}>
-        <option value="">Mode of Event</option>
-        <option>Online</option>
-        <option>Offline</option>
-      </select>
+      <input
+        name="campus"
+        placeholder="Campus"
+        value={form.campus}
+        onChange={handleChange}
+      />
 
-      <input name="organizer" placeholder="Organizer" onChange={handleChange} />
+      <input
+        name="venue"
+        placeholder="Venue"
+        value={form.venue}
+        onChange={handleChange}
+      />
 
-      <select name="type" onChange={handleChange}>
-        <option value="">Event Type</option>
-        <option>Workshop</option>
-        <option>Competition</option>
-        <option>Hackathon</option>
-        <option>Cultural</option>
-        <option>Seminar</option>
-        <option>Others</option>
-      </select>
-
-      <select name="visibility" onChange={handleChange}>
-        <option value="">Visibility</option>
-        <option>KCE</option>
-        <option>KIT</option>
-        <option>KAHE</option>
-        <option>All Colleges</option>
-      </select>
+      <input
+        name="organizer"
+        placeholder="Organizer"
+        value={form.organizer}
+        onChange={handleChange}
+      />
 
       <input
         name="targetAudience"
         placeholder="Target Audience"
+        value={form.targetAudience}
         onChange={handleChange}
       />
 
-      <input type="date" name="eventDate" onChange={handleChange} />
+      {/* Select with placeholder */}
+      <select name="mode" value={form.mode} onChange={handleChange}>
+        <option value="" disabled>
+          Select Mode
+        </option>
+        <option value="Online">Online</option>
+        <option value="Offline">Offline</option>
+      </select>
 
+      <select name="type" value={form.type} onChange={handleChange}>
+        <option value="" disabled>
+          Select Event Type
+        </option>
+        <option value="Workshop">Workshop</option>
+        <option value="Competition">Competition</option>
+        <option value="Hackathon">Hackathon</option>
+        <option value="Cultural">Cultural</option>
+        <option value="Seminar">Seminar</option>
+        <option value="Others">Others</option>
+      </select>
+
+      <select name="visibility" value={form.visibility} onChange={handleChange}>
+        <option value="" disabled>
+          Select Visibility
+        </option>
+        <option value="KCE">KCE</option>
+        <option value="KIT">KIT</option>
+        <option value="KAHE">KAHE</option>
+        <option value="All Colleges">All Colleges</option>
+      </select>
+
+      {/* Status */}
       <label className="toggle">
         Status
         <input
@@ -85,7 +137,13 @@ export default function EventsForm({ onSave }) {
         />
       </label>
 
-      <button type="submit">Save</button>
+      {/* Buttons */}
+      <button type="submit">
+        {initialData ? "Update Event" : "Save Event"}
+      </button>
+      <button type="button" onClick={onCancel}>
+        Cancel
+      </button>
     </form>
   );
 }

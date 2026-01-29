@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function AchieversForm({ onSave }) {
-  const [entryType, setEntryType] = useState("image"); // image | manual
-  const [studentCount, setStudentCount] = useState(0);
+export default function AchieversForm({ onSave, initialData, onCancel }) {
+  const [entryType, setEntryType] = useState("image");
 
   const [form, setForm] = useState({
     name: "",
@@ -15,6 +14,17 @@ export default function AchieversForm({ onSave }) {
     students: [],
   });
 
+  // ✅ populate when editing
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        ...initialData,
+        eventDate: initialData.eventDate?.substring(0, 10) || "",
+      });
+      setEntryType(initialData.posterImage ? "image" : "manual");
+    }
+  }, [initialData]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm({
@@ -23,16 +33,13 @@ export default function AchieversForm({ onSave }) {
     });
   };
 
-  // Handle student field change
   const handleStudentChange = (index, field, value) => {
     const updated = [...form.students];
     updated[index][field] = value;
     setForm({ ...form, students: updated });
   };
 
-  // When number of students changes
   const handleStudentCount = (count) => {
-    setStudentCount(count);
     const students = Array.from({ length: count }, () => ({
       name: "",
       year: "",
@@ -49,10 +56,27 @@ export default function AchieversForm({ onSave }) {
 
   return (
     <form className="inline-form" onSubmit={submit}>
-      <input name="name" placeholder="Achievement Name" onChange={handleChange} required />
-      <input name="batch" placeholder="Batch" onChange={handleChange} />
+      <input
+        name="name"
+        placeholder="Achievement Name"
+        value={form.name}
+        onChange={handleChange}
+        required
+      />
 
-      <select name="category" onChange={handleChange} required>
+      <input
+        name="batch"
+        placeholder="Batch"
+        value={form.batch}
+        onChange={handleChange}
+      />
+
+      <select
+        name="category"
+        value={form.category}
+        onChange={handleChange}
+        required
+      >
         <option value="">Select Category</option>
         <option>Academics</option>
         <option>Placement</option>
@@ -61,24 +85,20 @@ export default function AchieversForm({ onSave }) {
         <option>Others</option>
       </select>
 
-      {/* RADIO BUTTONS */}
+      {/* RADIO */}
       <div>
         <label>
           <input
             type="radio"
-            name="entryType"
-            value="image"
             checked={entryType === "image"}
             onChange={() => setEntryType("image")}
           />
           Image URL
         </label>
 
-        <label style={{ marginLeft: "15px" }}>
+        <label style={{ marginLeft: 15 }}>
           <input
             type="radio"
-            name="entryType"
-            value="manual"
             checked={entryType === "manual"}
             onChange={() => setEntryType("manual")}
           />
@@ -86,17 +106,15 @@ export default function AchieversForm({ onSave }) {
         </label>
       </div>
 
-      {/* IMAGE URL OPTION */}
       {entryType === "image" && (
         <input
-          type="text"
-          placeholder="Poster Image URL"
           name="posterImage"
+          placeholder="Poster Image URL"
+          value={form.posterImage}
           onChange={handleChange}
         />
       )}
 
-      {/* MANUAL ENTRY OPTION */}
       {entryType === "manual" && (
         <>
           <input
@@ -106,35 +124,35 @@ export default function AchieversForm({ onSave }) {
             onChange={(e) => handleStudentCount(Number(e.target.value))}
           />
 
-          {form.students.map((student, index) => (
-            <div key={index} className="student-box">
-              <h4>Student {index + 1}</h4>
-
+          {form.students.map((s, i) => (
+            <div key={i} className="student-box">
+              <h4>Student {i + 1}</h4>
               <input
                 placeholder="Name"
+                value={s.name}
                 onChange={(e) =>
-                  handleStudentChange(index, "name", e.target.value)
+                  handleStudentChange(i, "name", e.target.value)
                 }
               />
-
               <input
                 placeholder="Year"
+                value={s.year}
                 onChange={(e) =>
-                  handleStudentChange(index, "year", e.target.value)
+                  handleStudentChange(i, "year", e.target.value)
                 }
               />
-
               <input
                 placeholder="Department"
+                value={s.dept}
                 onChange={(e) =>
-                  handleStudentChange(index, "dept", e.target.value)
+                  handleStudentChange(i, "dept", e.target.value)
                 }
               />
-
               <input
                 placeholder="Image URL"
+                value={s.imageUrl}
                 onChange={(e) =>
-                  handleStudentChange(index, "imageUrl", e.target.value)
+                  handleStudentChange(i, "imageUrl", e.target.value)
                 }
               />
             </div>
@@ -145,10 +163,16 @@ export default function AchieversForm({ onSave }) {
       <textarea
         name="description"
         placeholder="Description"
+        value={form.description}
         onChange={handleChange}
       />
 
-      <input type="date" name="eventDate" onChange={handleChange} />
+      <input
+        type="date"
+        name="eventDate"
+        value={form.eventDate}
+        onChange={handleChange}
+      />
 
       <label>
         Status
@@ -160,7 +184,12 @@ export default function AchieversForm({ onSave }) {
         />
       </label>
 
-      <button type="submit">Save</button>
+      <button type="submit">
+        {initialData ? "Update" : "Save"}
+      </button>
+      <button type="button" onClick={onCancel}>
+        Cancel
+      </button>
     </form>
   );
 }

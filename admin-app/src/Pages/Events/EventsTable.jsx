@@ -1,4 +1,4 @@
-export default function EventsTable({ data }) {
+export default function EventsTable({ data, onEdit, onDelete }) {
   return (
     <table className="admin-table">
       <thead>
@@ -22,7 +22,10 @@ export default function EventsTable({ data }) {
             <td>{e.type}</td>
             <td>{e.visibility}</td>
             <td>{e.status ? "Enable" : "Disable"}</td>
-            <td>Edit | Delete</td>
+            <td>
+              <button onClick={() => onEdit(e)}>Edit</button>
+              <button onClick={() => onDelete(e._id)}>Delete</button>
+            </td>
           </tr>
         ))}
       </tbody>
