@@ -3,12 +3,23 @@ import { Container, Nav, Modal, Button } from "react-bootstrap";
 import api from "../../api/axios";
 import AchieversTable from "./AchieversTable";
 import AchieversForm from "./AchieversForm";
+
 import "./achievers.css";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import * as XLSX from "xlsx";
+import FileDownloadIcon from "@mui/icons-material/FileDownload"; // Assuming you might want an icon, or just use text
 
 export default function AchieversPage() {
   const [activeTab, setActiveTab] = useState("list");
   const [data, setData] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
+
+  // Pagination & Filter State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCollege, setFilterCollege] = useState("");
 
   // Dirty State Logic
   const [isDirty, setIsDirty] = useState(false);
@@ -24,8 +35,22 @@ export default function AchieversPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/achievers");
-      setData(res.data);
+      const res = await api.get("/achievers", {
+        params: {
+          page: currentPage,
+          limit: 10,
+          search: searchTerm,
+          college: filterCollege,
+        },
+      });
+      // Handle response structure { data: [], totalPages: 5, ... }
+      if (res.data && res.data.data) {
+        setData(res.data.data);
+        setTotalPages(res.data.totalPages || 1);
+      } else {
+        // Fallback if backend not updated or returns array
+        setData(res.data);
+      }
     } catch (error) {
       console.error("Failed to load data", error);
     } finally {
@@ -34,8 +59,27 @@ export default function AchieversPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    // Debounce search slightly to avoid too many requests
+    const timer = setTimeout(() => {
+      loadData();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [currentPage, searchTerm, filterCollege]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleSearchChange = (term) => {
+    setSearchTerm(term);
+    setCurrentPage(1); // Reset to first page on search
+  };
+
+  const handleFilterChange = (college) => {
+    setFilterCollege(college);
+    setCurrentPage(1); // Reset to first page on filter
+  };
 
   // Protect against browser close/refresh
   useEffect(() => {
@@ -137,11 +181,75 @@ export default function AchieversPage() {
     }
   };
 
+  // Export Data Logic
+  const handleExportPDF = async () => {
+    try {
+      const res = await api.get("/achievers", {
+        params: { limit: 1000, search: searchTerm, college: filterCollege },
+      });
+      const exportData = res.data.data || res.data; // Handle pagination or list
+
+      const doc = new jsPDF();
+      doc.text("Achievers List", 14, 15);
+
+      const tableColumn = ["Name", "College", "Batch", "Category", "Status"];
+      const tableRows = [];
+
+      exportData.forEach((item) => {
+        const rowData = [
+          item.name,
+          item.college,
+          item.batch,
+          item.category,
+          item.status ? "Active" : "Closed",
+        ];
+        tableRows.push(rowData);
+      });
+
+      doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 20,
+      });
+
+      doc.save("achievers_report.pdf");
+    } catch (error) {
+      console.error("Export failed", error);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const res = await api.get("/achievers", {
+        params: { limit: 1000, search: searchTerm, college: filterCollege },
+      });
+      const exportData = res.data.data || res.data;
+
+      const worksheet = XLSX.utils.json_to_sheet(
+        exportData.map((item) => ({
+          Name: item.name,
+          College: item.college,
+          Batch: item.batch,
+          Category: item.category,
+          Description: item.description,
+          EventDate: item.eventDate ? item.eventDate.split("T")[0] : "",
+          Status: item.status ? "Active" : "Closed",
+        })),
+      );
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Achievers");
+      XLSX.writeFile(workbook, "achievers_report.xlsx");
+    } catch (error) {
+      console.error("Excel export failed", error);
+    }
+  };
+
   return (
     <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
         <div>
-          <h2 className="fw-bold text-primary mb-0">Achievers Management</h2>
+          <h2 className="fw-bold color2 mb-0">Achievers Management</h2>
           <p className="text-muted small mb-0">
             Record and manage student achievements
           </p>
@@ -149,18 +257,18 @@ export default function AchieversPage() {
       </div>
 
       <Nav
-        variant="tabs"
-        className="mb-4"
+        variant="pills"
+        className="modern-tabs mb-4"
         activeKey={activeTab}
         onSelect={handleTabSelect}
       >
         <Nav.Item>
-          <Nav.Link eventKey="list" className="fw-bold px-4">
+          <Nav.Link eventKey="list" className="px-4">
             View List
           </Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="form" className="fw-bold px-4">
+          <Nav.Link eventKey="form" className="px-4">
             {editingItem ? "Edit Entry" : "Add New"}
           </Nav.Link>
         </Nav.Item>
@@ -173,6 +281,16 @@ export default function AchieversPage() {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onStatusToggle={handleStatusToggle}
+          // Pagination & Filtering Props
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
+          filterCollege={filterCollege}
+          onFilterChange={handleFilterChange}
+          onExportExcel={handleExportExcel}
+          onExportPDF={handleExportPDF}
         />
       )}
 
