@@ -1,7 +1,7 @@
-import Event from "../models/Event.js";
+const Event = require("../models/Event");
 
-// CREATE event
-export const createEvent = async (req, res) => {
+// CREATE
+exports.createEvent = async (req, res) => {
   try {
     const event = new Event(req.body);
     await event.save();
@@ -11,39 +11,30 @@ export const createEvent = async (req, res) => {
   }
 };
 
-// GET all events
-export const getEvents = async (req, res) => {
+// READ
+exports.getEvents = async (req, res) => {
   try {
-    const events = await Event.find({ isDeleted: { $ne: true } }).sort({ createdAt: -1 });
+    const events = await Event.find({ isDeleted: false }).sort({ createdAt: -1 });
     res.json(events);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// UPDATE event
-export const updateEvent = async (req, res) => {
+// UPDATE
+exports.updateEvent = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const updated = await Event.findByIdAndUpdate(
-      id,
-      req.body,
-      { new: true }
-    );
-
+    const updated = await Event.findByIdAndUpdate(req.params.id,req.body,{ new: true });
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// DELETE (Soft Delete)
-export const deleteEvent = async (req, res) => {
+// DELETE (Soft)
+exports.deleteEvent = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    await Event.findByIdAndUpdate(id, { isDeleted: true });
+    await Event.findByIdAndUpdate(req.params.id, { isDeleted: true });
     res.json({ message: "Event deleted successfully (Soft)" });
   } catch (err) {
     res.status(500).json({ error: err.message });
