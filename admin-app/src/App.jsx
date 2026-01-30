@@ -9,6 +9,8 @@ import APIPage from "./Pages/API";
 import "./App.css";
 
 import LoginPage from "./Pages/Auth/LoginPage";
+import ProtectedRoute from "./component/ProtectedRoute";
+import UnauthorizedPage from "./Pages/Auth/UnauthorizedPage";
 
 function MainLayout() {
   return (
@@ -18,11 +20,16 @@ function MainLayout() {
         <Sidebar />
         <main className="page-content-wrapper">
           <Routes>
+              <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
             <Route path="/" element={<AchieversPage />} />
             <Route path="/achievers" element={<AchieversPage />} />
             <Route path="/events" element={<EventsPage />} />
-            <Route path="/users" element={<UsersPage />} />
             <Route path="/api-integration" element={<APIPage />} />
+
+            {/* Admin Only Route */}
+          
+              <Route path="/users" element={<UsersPage />} />
+            </Route>
           </Routes>
         </main>
       </div>
@@ -35,7 +42,12 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/*" element={<MainLayout />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+        {/* Protected Routes (Accessible by 'user' and 'admin') */}
+        <Route element={<ProtectedRoute allowedRoles={["user", "admin"]} />}>
+          <Route path="/*" element={<MainLayout />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
