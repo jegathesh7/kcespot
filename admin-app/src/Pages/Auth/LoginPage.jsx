@@ -44,9 +44,9 @@ const LoginPage = () => {
 
       // Assuming response.data contains token and user info
       // Store token in localStorage
-      
-      if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
+
+      if (response.data.message === "Login successful") {
+        // localStorage.setItem("token", response.data.token); // No longer needed
         localStorage.setItem("user", JSON.stringify(response.data.user));
         navigate("/achievers"); // Redirect to dashboard
       } else {

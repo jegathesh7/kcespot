@@ -4,6 +4,7 @@ const { createAchiever, getAchievers, updateAchiever,deleteAchiever } = require(
 
 
 const upload = require("../middleware/upload");
+const { protect } = require("../middleware/authMiddleware");
 
 router.post("/", upload.any(), createAchiever);
 router.get("/", getAchievers);
