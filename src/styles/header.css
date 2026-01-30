@@ -1,0 +1,56 @@
+/* Top header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #ddd;
+  background: #fff;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-logo {
+  height: 40px;
+}
+
+.header-left h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1f2a37;
+}
+
+.header-right .profile-icon {
+  font-size: 36px;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+/* Navigation tabs */
+.nav-tabs {
+  display: flex;
+  gap: 25px;
+  padding: 12px 30px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.tab {
+  text-decoration: none;
+  font-size: 18px;
+  color: #3b82f6;
+  padding-bottom: 6px;
+}
+
+.tab.active {
+  font-weight: 600;
+  border-bottom: 3px solid #3b82f6;
+}
+/* Hide default caret on custom dropdown toggle */
+.dropdown-toggle::after {
+  display: none !important;
+}
