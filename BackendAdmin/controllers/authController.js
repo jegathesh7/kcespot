@@ -1,60 +1,237 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const sendEmail = require("../service/emailService");
+const crypto = require("crypto");
 
-// REGISTER (Admin or User)
+// Helper to generate 6-digit OTP
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// REGISTER (Step 1: Create User & Send OTP)
 exports.register = async (req, res) => {
   try {
     const { name, collegeName, email, password, role } = req.body;
 
-    const exists = await User.findOne({ email });
-    if (exists) {
-      return res.status(400).json({ message: "User already exists" });
+    let user = await User.findOne({ email });
+
+    if (user && user.isVerified) {
+      return res.status(409).json({
+        status: "failed",
+        statusCode: 409,
+        message: "User already exists",
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const otp = generateOTP();
+    const otpExpires = Date.now() + 15 * 60 * 1000; // 15 mins
 
-    const user = await User.create({
-      name,
-      collegeName,
-      email,
-      password: hashedPassword,
-      role: role || "user", 
-    });
+    if (user) {
+      // Update existing unverified user
+      user.name = name;
+      user.collegeName = collegeName;
+      user.password = hashedPassword;
+      user.role = role || "user";
+      user.otp = otp;
+      user.otpExpires = otpExpires;
+      await user.save();
+    } else {
+      // Create new user
+      user = await User.create({
+        name,
+        collegeName,
+        email,
+        password: hashedPassword,
+        role: role || "user",
+        otp,
+        otpExpires,
+        isVerified: false,
+      });
+    }
 
-    res.status(201).json({
-      message: "User registered successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        role: user.role,
-      },
+    // Send Email
+    const subject = "Verify Your Account - KCE Spot";
+    const text = `Your OTP for verification is ${otp}. It expires in 15 minutes.`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #004d99;">Verify Your Account</h2>
+        <p>Hi ${name},</p>
+        <p>Your OTP for verification is:</p>
+        <h1 style="background: #f4f4f4; padding: 10px; display: inline-block; border-radius: 5px;">${otp}</h1>
+        <p>This OTP expires in 15 minutes.</p>
+        <p>If you did not request this, please ignore this email.</p>
+      </div>
+    `;
+
+    await sendEmail(email, subject, text, html);
+
+    res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "OTP sent to your email",
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Register Error:", err);
+    res.status(500).json({
+      status: "failed",
+      statusCode: 500,
+      message: err.message,
+    });
   }
 };
+
+// VERIFY REGISTRATION OTP (Step 2: Verify & Activate)
+exports.verifyRegistrationOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "User not found",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "User already verified",
+      });
+    }
+
+    if (user.otp !== otp) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "Invalid OTP",
+      });
+    }
+
+    if (Date.now() > user.otpExpires) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "OTP has expired",
+      });
+    }
+
+    // Verify User
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "Account verified successfully. You can now login.",
+    });
+  } catch (err) {
+    console.error("Verify Reg OTP Error:", err);
+    res.status(500).json({
+      status: "failed",
+      statusCode: 500,
+      message: err.message,
+    });
+  }
+};
+
+// RESEND REGISTRATION OTP
+exports.resendRegistrationOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "User not found",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "User already verified",
+      });
+    }
+
+    const otp = generateOTP();
+    user.otp = otp;
+    user.otpExpires = Date.now() + 15 * 60 * 1000;
+    await user.save();
+
+    const subject = "Resend OTP - Verify Your Account";
+    const text = `Your new OTP for verification is ${otp}.`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #004d99;">Resend OTP</h2>
+        <p>Hi ${user.name},</p>
+        <p>Your new OTP for verification is:</p>
+        <h1 style="background: #f4f4f4; padding: 10px; display: inline-block; border-radius: 5px;">${otp}</h1>
+        <p>This OTP expires in 15 minutes.</p>
+      </div>
+    `;
+
+    await sendEmail(email, subject, text, html);
+
+    res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "OTP resent successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "failed",
+      statusCode: 500,
+      message: err.message,
+    });
+  }
+};
+
 
 // LOGIN
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    // console.log(email, password);
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(400).json({ message: "User not found" });
+    if (!user) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "User not found",
+      });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid password" });
+    if (!isMatch) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "Invalid password",
+      });
+    }
 
-    // 🔑 JWT WITH ROLE
+    // Check if user is verified
+    if (!user.isVerified) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "Please verify your email address to login",
+      });
+    }
+
+    // Generate Token
     const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-      },
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -62,12 +239,14 @@ exports.login = async (req, res) => {
     // Set Cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // false in dev
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000 // 1 day
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     res.json({
+      status: "success",
+      statusCode: 200,
       message: "Login successful",
       user: {
         id: user._id,
@@ -75,9 +254,129 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
       },
-      // Token is in cookie now
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      status: "failed",
+      statusCode: 500,
+      message: err.message,
+    });
+  }
+};
+
+// FORGOT PASSWORD (Step 1: Send OTP)
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        status: "failed",
+        statusCode: 404,
+        message: "User not found",
+      });
+    }
+
+    const otp = generateOTP();
+    user.resetPasswordOtp = otp;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+    await user.save();
+
+    const subject = "Password Reset OTP - KCE Spot";
+    const text = `Your OTP for password reset is ${otp}.`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #004d99;">Password Reset</h2>
+        <p>Hi ${user.name},</p>
+        <p>Your OTP for password reset is:</p>
+        <h1 style="background: #f4f4f4; padding: 10px; display: inline-block; border-radius: 5px;">${otp}</h1>
+        <p>This OTP expires in 15 minutes.</p>
+        <p>If you did not request a password reset, please ignore this email.</p>
+      </div>
+    `;
+
+    await sendEmail(email, subject, text, html);
+
+    res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "Password reset OTP sent",
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "failed",
+      statusCode: 500,
+      message: err.message,
+    });
+  }
+};
+
+// VERIFY RESET OTP (Step 2: Check code only)
+exports.verifyResetOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ 
+      email, 
+      resetPasswordOtp: otp, 
+      resetPasswordExpires: { $gt: Date.now() } 
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "Invalid or expired OTP",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "OTP verified successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "failed",
+      statusCode: 500,
+      message: err.message,
+    });
+  }
+};
+
+// RESET PASSWORD (Step 3: New Password)
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const user = await User.findOne({ 
+      email, 
+      resetPasswordOtp: otp, 
+      resetPasswordExpires: { $gt: Date.now() } 
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "Invalid or expired OTP",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.resetPasswordOtp = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "Password reset successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "failed",
+      statusCode: 500,
+      message: err.message,
+    });
   }
 };
