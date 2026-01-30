@@ -20,6 +20,7 @@ import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import CelebrationIcon from "@mui/icons-material/Celebration";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
+import Swal from "sweetalert2";
 
 import TablePlaceholder from "../../component/TablePlaceholder";
 export default function AchieversTable({
@@ -38,14 +39,6 @@ export default function AchieversTable({
   onExportExcel,
   onExportPDF,
 }) {
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
-  const [deleteName, setDeleteName] = useState("");
-
-  // Status Modal State
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [statusItem, setStatusItem] = useState(null);
-
   // Image Modal State
   const [showModal, setShowModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
@@ -66,31 +59,35 @@ export default function AchieversTable({
   };
 
   const handleDeleteClick = (id, name) => {
-    setDeleteId(id);
-    setDeleteName(name);
-    setShowDeleteModal(true);
+    Swal.fire({
+      title: "Confirm Delete",
+      text: `Are you sure you want to delete the achievement record for ${name}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Delete Item",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onDelete(id);
+      }
+    });
   };
 
   const handleStatusClick = (item) => {
-    setStatusItem(item);
-    setShowStatusModal(true);
-  };
-
-  const confirmStatusToggle = () => {
-    if (statusItem) {
-      onStatusToggle(statusItem._id, statusItem.status);
-      setShowStatusModal(false);
-      setStatusItem(null);
-    }
-  };
-
-  const handleConfirmDelete = () => {
-    if (deleteId) {
-      onDelete(deleteId); // Pass ID to parent handler
-      setShowDeleteModal(false);
-      setDeleteId(null);
-      setDeleteName("");
-    }
+    const newStatus = !item.status;
+    Swal.fire({
+      title: "Update Status",
+      text: `Do you want to change the status to ${newStatus ? "Active" : "Closed"}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: `Mark as ${newStatus ? "Active" : "Closed"}`,
+      confirmButtonColor: newStatus ? "#28a745" : "#6c757d",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onStatusToggle(item._id, item.status);
+      }
+    });
   };
 
   return (
@@ -392,65 +389,6 @@ export default function AchieversTable({
           )}
         </>
       )}
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        show={showDeleteModal}
-        onHide={() => setShowDeleteModal(false)}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title className="h6 text-danger">Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete the achievement record for{" "}
-          <strong>{deleteName}</strong>?
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="light" onClick={() => setShowDeleteModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={handleConfirmDelete}>
-            Delete Item
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Status Update Modal */}
-      <Modal
-        show={showStatusModal}
-        onHide={() => setShowStatusModal(false)}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title className="h6 fw-bold">Update Status</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>
-            Current Status:{" "}
-            <strong
-              className={statusItem?.status ? "text-success" : "text-secondary"}
-            >
-              {statusItem?.status ? "Active" : "Closed"}
-            </strong>
-          </p>
-          <p className="mb-0">
-            Do you want to change the status to{" "}
-            <strong>{statusItem?.status ? "Closed" : "Active"}</strong>?
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="light" onClick={() => setShowStatusModal(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant={statusItem?.status ? "secondary" : "success"} // Color based on target action
-            onClick={confirmStatusToggle}
-          >
-            Mark as {statusItem?.status ? "Closed" : "Active"}
-          </Button>
-        </Modal.Footer>
-      </Modal>
 
       {/* Image Preview Modal */}
       {showModal && (

@@ -10,6 +10,7 @@ import "../Achievers/achievers.css";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import * as XLSX from "xlsx";
+import Swal from "sweetalert2";
 
 export default function EventsPage() {
   const [activeTab, setActiveTab] = useState("list");
@@ -27,8 +28,6 @@ export default function EventsPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [nextTab, setNextTab] = useState(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
   const formRef = useRef();
 
   const loadEvents = async () => {
@@ -192,8 +191,23 @@ export default function EventsPage() {
     try {
       await api.delete(`/events/${id}`);
       loadEvents();
+      Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.onmouseenter = Swal.stopTimer;
+          toast.onmouseleave = Swal.resumeTimer;
+        },
+      }).fire({
+        icon: "success",
+        title: "Event has been deleted.",
+      });
     } catch (error) {
       console.error("Failed to delete event", error);
+      Swal.fire("Error", "Failed to delete event", "error");
     }
   };
 
@@ -201,11 +215,23 @@ export default function EventsPage() {
     try {
       await api.put(`/events/${id}`, { status: !currentStatus });
       loadEvents();
-      setSuccessMessage("Status updated successfully!");
-      setShowSuccessModal(true);
+      Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.onmouseenter = Swal.stopTimer;
+          toast.onmouseleave = Swal.resumeTimer;
+        },
+      }).fire({
+        icon: "success",
+        title: "Status updated successfully!",
+      });
     } catch (error) {
       console.error("Failed to update status", error);
-      alert("Failed to update status");
+      Swal.fire("Error", "Failed to update status", "error");
     }
   };
 
@@ -213,19 +239,44 @@ export default function EventsPage() {
     try {
       if (editingItem) {
         await api.put(`/events/${editingItem._id}`, formData);
-        setSuccessMessage("Event updated successfully!");
+        Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        }).fire({
+          icon: "success",
+          title: "Event updated successfully!",
+        });
       } else {
         await api.post("/events", formData);
-        setSuccessMessage("New event created successfully!");
+        Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        }).fire({
+          icon: "success",
+          title: "New event created successfully!",
+        });
       }
       setIsDirty(false); // Reset dirty state on save
       setActiveTab("list");
       setEditingItem(null);
       loadEvents();
-      setShowSuccessModal(true);
     } catch (error) {
       console.error("Failed to save event", error);
-      alert("Failed to save event");
+      Swal.fire("Error", "Failed to save event", "error");
     }
   };
 
@@ -328,41 +379,6 @@ export default function EventsPage() {
           setIsDirty={setIsDirty}
         />
       )}
-
-      {/* Success Modal */}
-      <Modal
-        show={showSuccessModal}
-        onHide={() => setShowSuccessModal(false)}
-        centered
-      >
-        <Modal.Body className="text-center p-5">
-          <div className="mb-4 text-success">
-            <svg
-              width="80"
-              height="80"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-          </div>
-          <h4 className="fw-bold mb-3 success-modal-title">Success!</h4>
-          <p className="text-muted mb-4">{successMessage}</p>
-          <Button
-            variant="success"
-            className="px-5 py-2 fw-bold"
-            onClick={() => setShowSuccessModal(false)}
-            style={{ borderRadius: "50px" }}
-          >
-            Awesome!
-          </Button>
-        </Modal.Body>
-      </Modal>
 
       {/* Unsaved Changes Modal */}
       <Modal

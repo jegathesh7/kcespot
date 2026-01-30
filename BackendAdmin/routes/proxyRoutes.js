@@ -1,9 +1,10 @@
 const express = require("express");
 const axios = require("axios");
+const { protect, adminOnly } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 
-router.get("/opportunities", async (req, res) => {
+router.get("/opportunities",protect,adminOnly, async (req, res) => {
   try {
     const { opportunity, page, per_page, oppstatus, usertype, domain, q } = req.query;
     const targetUrl = "https://unstop.com/api/public/opportunity/search-result";
