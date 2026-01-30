@@ -1,7 +1,6 @@
-import Event from "../models/Event.js";
-
+const Event = require("../models/Event.js");
 // CREATE event
-export const createEvent = async (req, res) => {
+exports.createEvent = async (req, res) => {
   try {
     const entryData = { ...req.body };
     if (req.file) {
@@ -16,7 +15,7 @@ export const createEvent = async (req, res) => {
 };
 
 // GET all events with Pagination, Search, and Filter
-export const getEvents = async (req, res) => {
+exports.getEvents = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", campus = "" } = req.query;
 
@@ -51,7 +50,7 @@ export const getEvents = async (req, res) => {
 };
 
 // UPDATE event
-export const updateEvent = async (req, res) => {
+exports.updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = { ...req.body };
@@ -73,7 +72,7 @@ export const updateEvent = async (req, res) => {
 };
 
 // DELETE (Soft Delete)
-export const deleteEvent = async (req, res) => {
+exports.deleteEvent = async (req, res) => {
   try {
     const { id } = req.params;
 
