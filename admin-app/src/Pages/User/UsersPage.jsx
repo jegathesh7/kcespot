@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Container, Nav } from "react-bootstrap";
 import api from "../../api/axios";
 import UsersTable from "./UsersTable";
+import Swal from "sweetalert2";
 //import "./users.css";
 
 export default function UsersPage() {
@@ -51,29 +52,82 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        await api.delete(`/users/${id}`);
-        loadUsers();
-      } catch (err) {
-        console.error("Delete failed", err);
+    Swal.fire({
+      title: "Confirm Delete",
+      text: "Are you sure you want to delete this user?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Delete",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await api.delete(`/users/${id}`);
+          loadUsers();
+          Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+              toast.onmouseenter = Swal.stopTimer;
+              toast.onmouseleave = Swal.resumeTimer;
+            },
+          }).fire({
+            icon: "success",
+            title: "User has been deleted.",
+          });
+        } catch (err) {
+          console.error("Delete failed", err);
+          Swal.fire("Error", "Failed to delete user", "error");
+        }
       }
-    }
+    });
   };
 
   const handleSave = async (formData) => {
     try {
       if (editingItem) {
         await api.put(`/users/${editingItem._id}`, formData);
+        Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        }).fire({
+          icon: "success",
+          title: "User updated successfully!",
+        });
       } else {
         await api.post("/users", formData);
+        Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        }).fire({
+          icon: "success",
+          title: "User created successfully!",
+        });
       }
       setActiveTab("list");
       setEditingItem(null);
       loadUsers();
     } catch (err) {
       console.error("Save failed", err);
-      alert("Failed to save user");
+      Swal.fire("Error", "Failed to save user", "error");
     }
   };
 

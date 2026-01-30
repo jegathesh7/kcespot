@@ -11,6 +11,7 @@ import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import CelebrationIcon from "@mui/icons-material/Celebration";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
+import Swal from "sweetalert2";
 
 import TablePlaceholder from "../../component/TablePlaceholder";
 
@@ -46,20 +47,36 @@ export default function EventsTable({
     setSelectedTitle("");
   };
 
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [statusItem, setStatusItem] = useState(null);
-
   const handleStatusClick = (eventItem) => {
-    setStatusItem(eventItem);
-    setShowStatusModal(true);
+    const newStatus = !eventItem.status;
+    Swal.fire({
+      title: "Update Status",
+      text: `Do you want to change the status to ${newStatus ? "Active" : "Closed"}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: `Mark as ${newStatus ? "Active" : "Closed"}`,
+      confirmButtonColor: newStatus ? "#28a745" : "#6c757d",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onStatusToggle(eventItem._id, eventItem.status);
+      }
+    });
   };
 
-  const confirmStatusToggle = () => {
-    if (statusItem) {
-      onStatusToggle(statusItem._id, statusItem.status);
-      setShowStatusModal(false);
-      setStatusItem(null);
-    }
+  const handleDeleteClick = (id, title) => {
+    Swal.fire({
+      title: "Confirm Delete",
+      text: `Are you sure you want to delete the event "${title}"?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Delete",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onDelete(id);
+      }
+    });
   };
 
   return (
@@ -125,213 +142,213 @@ export default function EventsTable({
           </div>
         </div>
       </div>
-        {loading ?( 
-          <TablePlaceholder />
-        ):(
-      <div className="modern-card">
-        <div className="table-responsive">
-          <Table className="custom-table mb-0 align-middle">
-            <thead>
-              <tr>
-                <th className="ps-4" style={{ width: "20%" }}>
-                  Event Details
-                </th>
-                <th style={{ width: "5%" }}>College</th>
-                <th style={{ width: "10%" }}>Organizer</th>
-                <th style={{ width: "5%" }}>Mode</th>
-                <th style={{ width: "8%" }}>Venue</th>
-                <th style={{ width: "8%" }}>Category</th>
-                {/* <th style={{ width: "6%" }}>Visibility</th> */}
-                <th className="text-center" style={{ width: "6%" }}>
-                  Images
-                </th>
-                <th className="text-center" style={{ width: "8%" }}>
-                  Status
-                </th>
-                <th
-                  className="text-end pe-4"
-                  style={{ minWidth: "100px", width: "auto" }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data && data.length > 0 ? (
-                data.map((e) => (
-                  <tr key={e._id}>
-                    {/* 1. Event Details */}
-                    <td className="ps-4">
-                      <div className="profile-cell-container">
-                        <div className="profile-info">
-                          <span
-                            className="profile-name text-truncate"
-                            style={{ maxWidth: "200px" }}
-                            title={e.title}
-                          >
-                            {e.title}
-                          </span>
-                          <span className="profile-subtitle">
-                            {e.eventDate
-                              ? new Date(e.eventDate).toLocaleDateString(
-                                  undefined,
-                                  {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  },
-                                )
-                              : "No Date"}
-                          </span>
+      {loading ? (
+        <TablePlaceholder />
+      ) : (
+        <div className="modern-card">
+          <div className="table-responsive">
+            <Table className="custom-table mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th className="ps-4" style={{ width: "20%" }}>
+                    Event Details
+                  </th>
+                  <th style={{ width: "5%" }}>College</th>
+                  <th style={{ width: "10%" }}>Organizer</th>
+                  <th style={{ width: "5%" }}>Mode</th>
+                  <th style={{ width: "8%" }}>Venue</th>
+                  <th style={{ width: "8%" }}>Category</th>
+                  {/* <th style={{ width: "6%" }}>Visibility</th> */}
+                  <th className="text-center" style={{ width: "6%" }}>
+                    Images
+                  </th>
+                  <th className="text-center" style={{ width: "8%" }}>
+                    Status
+                  </th>
+                  <th
+                    className="text-end pe-4"
+                    style={{ minWidth: "100px", width: "auto" }}
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data && data.length > 0 ? (
+                  data.map((e) => (
+                    <tr key={e._id}>
+                      {/* 1. Event Details */}
+                      <td className="ps-4">
+                        <div className="profile-cell-container">
+                          <div className="profile-info">
+                            <span
+                              className="profile-name text-truncate"
+                              style={{ maxWidth: "200px" }}
+                              title={e.title}
+                            >
+                              {e.title}
+                            </span>
+                            <span className="profile-subtitle">
+                              {e.eventDate
+                                ? new Date(e.eventDate).toLocaleDateString(
+                                    undefined,
+                                    {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    },
+                                  )
+                                : "No Date"}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* 2. College */}
-                    <td>
-                      {e.campus ? (
+                      {/* 2. College */}
+                      <td>
+                        {e.campus ? (
+                          <span
+                            className={`modern-badge ${getBadgeClassOfCollege(e.campus)}`}
+                          >
+                            {e.campus}
+                          </span>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
+
+                      {/* 3. Organizer */}
+                      <td>
                         <span
-                          className={`modern-badge ${getBadgeClassOfCollege(e.campus)}`}
+                          className="fw-medium text-dark small text-truncate d-block"
+                          style={{ maxWidth: "100px" }}
+                          title={e.organizer}
                         >
-                          {e.campus}
+                          {e.organizer || "-"}
                         </span>
-                      ) : (
-                        <span className="text-muted">-</span>
-                      )}
-                    </td>
+                      </td>
 
-                    {/* 3. Organizer */}
-                    <td>
-                      <span
-                        className="fw-medium text-dark small text-truncate d-block"
-                        style={{ maxWidth: "100px" }}
-                        title={e.organizer}
-                      >
-                        {e.organizer || "-"}
-                      </span>
-                    </td>
+                      {/* 4. Mode */}
+                      <td>
+                        <span className="fw-medium text-dark small">
+                          {e.mode || "N/A"}
+                        </span>
+                      </td>
 
-                    {/* 4. Mode */}
-                    <td>
-                      <span className="fw-medium text-dark small">
-                        {e.mode || "N/A"}
-                      </span>
-                    </td>
+                      {/* 5. Venue */}
+                      <td>
+                        <span
+                          className="small text-muted text-truncate d-block"
+                          style={{ maxWidth: "100px" }}
+                          title={e.venue}
+                        >
+                          {e.venue || "-"}
+                        </span>
+                      </td>
 
-                    {/* 5. Venue */}
-                    <td>
-                      <span
-                        className="small text-muted text-truncate d-block"
-                        style={{ maxWidth: "100px" }}
-                        title={e.venue}
-                      >
-                        {e.venue || "-"}
-                      </span>
-                    </td>
+                      {/* 6. Category */}
+                      <td>
+                        <span className="modern-badge badge-category">
+                          {e.type}
+                        </span>
+                      </td>
 
-                    {/* 6. Category */}
-                    <td>
-                      <span className="modern-badge badge-category">
-                        {e.type}
-                      </span>
-                    </td>
-
-                    {/* 7. Visibility */}
-                    {/* <td>
+                      {/* 7. Visibility */}
+                      {/* <td>
                       <span className="small text-dark fw-medium">
                         {e.visibility}
                       </span>
                     </td> */}
 
-                    {/* 8. Images */}
-                    <td className="text-center">
-                      {e.eventImage ? (
-                        <Tooltip title="View Poster">
-                          <Button
-                            variant="light"
-                            className="action-btn mx-auto"
-                            onClick={() =>
-                              handleViewImage(e.title, e.eventImage)
-                            }
-                          >
-                            <VisibilityIcon fontSize="small" />
-                          </Button>
-                        </Tooltip>
-                      ) : (
-                        <span className="text-muted small">-</span>
-                      )}
-                    </td>
+                      {/* 8. Images */}
+                      <td className="text-center">
+                        {e.eventImage ? (
+                          <Tooltip title="View Poster">
+                            <Button
+                              variant="light"
+                              className="action-btn mx-auto"
+                              onClick={() =>
+                                handleViewImage(e.title, e.eventImage)
+                              }
+                            >
+                              <VisibilityIcon fontSize="small" />
+                            </Button>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-muted small">-</span>
+                        )}
+                      </td>
 
-                    {/* 9. Status */}
-                    <td className="text-center">
-                      <div className="status-wrapper">
-                        <Form.Check
-                          type="switch"
-                          id={`status-${e._id}`}
-                          checked={e.status}
-                          onChange={() => handleStatusClick(e)}
-                          style={{
-                            cursor: "pointer",
-                            margin: 0,
-                            minHeight: "auto",
-                          }}
-                        />
-                        <span
-                          className={`status-label ${e.status ? "text-success" : "text-secondary"}`}
-                        >
-                          {e.status ? "Active" : "Closed"}
-                        </span>
-                      </div>
-                    </td>
+                      {/* 9. Status */}
+                      <td className="text-center">
+                        <div className="status-wrapper">
+                          <Form.Check
+                            type="switch"
+                            id={`status-${e._id}`}
+                            checked={e.status}
+                            onChange={() => handleStatusClick(e)}
+                            style={{
+                              cursor: "pointer",
+                              margin: 0,
+                              minHeight: "auto",
+                            }}
+                          />
+                          <span
+                            className={`status-label ${e.status ? "text-success" : "text-secondary"}`}
+                          >
+                            {e.status ? "Active" : "Closed"}
+                          </span>
+                        </div>
+                      </td>
 
-                    {/* 10. Actions */}
-                    <td className="pe-4 text-end">
-                      <div className="d-flex justify-content-end gap-1">
-                        <Tooltip title="Edit" className="text-primary">
-                          <button
-                            className="action-btn edit"
-                            onClick={() => onEdit(e)}
-                          >
-                            <EditIcon fontSize="small" />
-                          </button>
-                        </Tooltip>
-                        <Tooltip title="Delete" className="text-danger">
-                          <button
-                            className="action-btn delete"
-                            onClick={() => onDelete(e._id)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </button>
-                        </Tooltip>
+                      {/* 10. Actions */}
+                      <td className="pe-4 text-end">
+                        <div className="d-flex justify-content-end gap-1">
+                          <Tooltip title="Edit" className="text-primary">
+                            <button
+                              className="action-btn edit"
+                              onClick={() => onEdit(e)}
+                            >
+                              <EditIcon fontSize="small" />
+                            </button>
+                          </Tooltip>
+                          <Tooltip title="Delete" className="text-danger">
+                            <button
+                              className="action-btn delete"
+                              onClick={() => handleDeleteClick(e._id, e.title)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </button>
+                          </Tooltip>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="10" className="text-center py-5">
+                      <div className="d-flex flex-column align-items-center justify-content-center p-4">
+                        <div className="bg-light rounded-circle p-3 mb-3">
+                          <SearchIcon
+                            className="text-secondary opacity-50"
+                            style={{ fontSize: "32px" }}
+                          />
+                        </div>
+                        <h6 className="text-secondary fw-bold mb-1">
+                          No events found
+                        </h6>
+                        <p className="text-muted small mb-0">
+                          Try adjusting your search or filters.
+                        </p>
                       </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="10" className="text-center py-5">
-                    <div className="d-flex flex-column align-items-center justify-content-center p-4">
-                      <div className="bg-light rounded-circle p-3 mb-3">
-                        <SearchIcon
-                          className="text-secondary opacity-50"
-                          style={{ fontSize: "32px" }}
-                        />
-                      </div>
-                      <h6 className="text-secondary fw-bold mb-1">
-                        No events found
-                      </h6>
-                      <p className="text-muted small mb-0">
-                        Try adjusting your search or filters.
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </Table>
+                )}
+              </tbody>
+            </Table>
+          </div>
         </div>
-      </div>
-        )}
+      )}
       {totalPages > 1 && (
         <div className="d-flex justify-content-center mt-4">
           <Pagination className="shadow-sm">
@@ -355,42 +372,6 @@ export default function EventsTable({
           </Pagination>
         </div>
       )}
-
-      {/* Status Update Modal */}
-      <Modal
-        show={showStatusModal}
-        onHide={() => setShowStatusModal(false)}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title className="h6 fw-bold">Update Status</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>
-            Current Status:{" "}
-            <strong
-              className={statusItem?.status ? "text-success" : "text-secondary"}
-            >
-              {statusItem?.status ? "Active" : "Closed"}
-            </strong>
-          </p>
-          <p className="mb-0">
-            Do you want to change the status to{" "}
-            <strong>{statusItem?.status ? "Closed" : "Active"}</strong>?
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="light" onClick={() => setShowStatusModal(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant={statusItem?.status ? "secondary" : "success"} // Color based on target action
-            onClick={confirmStatusToggle}
-          >
-            Mark as {statusItem?.status ? "Closed" : "Active"}
-          </Button>
-        </Modal.Footer>
-      </Modal>
 
       {/* Image Preview Modal */}
       {showModal && (
