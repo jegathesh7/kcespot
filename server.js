@@ -9,7 +9,7 @@ connectDB();
 
 
 app.use(cors({
-  origin: "http://localhost:5173", // Frontend URL
+  origin: "https://localhost:5173", // Frontend URL
   credentials: true
 }));
 app.use(express.json());
@@ -19,6 +19,8 @@ app.use(require("cookie-parser")());
 
 // Make uploads folder static
 app.use("/uploads", express.static("uploads"));
+
+
 
 
 // ✅ ROUTES (paths must be EXACT)

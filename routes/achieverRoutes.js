@@ -4,12 +4,12 @@ const { createAchiever, getAchievers, updateAchiever,deleteAchiever } = require(
 
 
 const upload = require("../middleware/upload");
-const { protect } = require("../middleware/authMiddleware");
+const { protect, adminOnly } = require("../middleware/authMiddleware");
 
-router.post("/", upload.any(), createAchiever);
-router.get("/", getAchievers);
-router.put("/:id", upload.any(), updateAchiever);
-router.delete("/:id", deleteAchiever);
+router.post("/",protect,adminOnly, upload.any(), createAchiever);
+router.get("/", protect,getAchievers);
+router.put("/:id", protect,adminOnly, upload.any(), updateAchiever);
+router.delete("/:id", protect,adminOnly, deleteAchiever);
 
 
 module.exports = router;
