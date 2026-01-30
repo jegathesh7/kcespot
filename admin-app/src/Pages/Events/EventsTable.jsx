@@ -62,8 +62,6 @@ export default function EventsTable({
     }
   };
 
-  if (loading) return <TablePlaceholder />;
-
   return (
     <>
       {/* Professional Toolbar */}
@@ -127,7 +125,9 @@ export default function EventsTable({
           </div>
         </div>
       </div>
-
+        {loading ?( 
+          <TablePlaceholder />
+        ):(
       <div className="modern-card">
         <div className="table-responsive">
           <Table className="custom-table mb-0 align-middle">
@@ -331,7 +331,7 @@ export default function EventsTable({
           </Table>
         </div>
       </div>
-
+        )}
       {totalPages > 1 && (
         <div className="d-flex justify-content-center mt-4">
           <Pagination className="shadow-sm">
