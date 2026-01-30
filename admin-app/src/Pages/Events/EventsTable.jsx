@@ -67,7 +67,7 @@ export default function EventsTable({
       {/* Professional Toolbar */}
       <div className="toolbar-card d-flex flex-column flex-lg-row align-items-center justify-content-between gap-3">
         {/* Search Bar */}
-        <div className="position-relative w-100" style={{ maxWidth: "450px" }}>
+        <div className="position-relative w-50" style={{ maxWidth: "450px" }}>
           <div className="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted">
             <SearchIcon style={{ fontSize: "20px" }} />
           </div>
