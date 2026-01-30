@@ -1,52 +1,168 @@
+/* Main Layout */
 .login-page {
-    background-color: #f8fafc !important; /* Slate 50 */
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%),
+                url('../../assets/image.png') no-repeat center center fixed;
+    background-size: cover;
     min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    position: relative;
+    padding: 1rem;
 }
 
+/* Glassmorphic Card */
 .login-card {
-    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px !important;
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.3) !important;
     overflow: hidden;
-    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 440px; /* Limit width in CSS */
+    margin: 0 auto;
 }
 
-.login-card:hover {
-    transform: translateY(-5px);
+/* Container inside card - override bootstrap padding if needed */
+.login-card .card-body {
+    padding: 2.5rem 2rem !important;
 }
 
-.color2 {
-    color: #1e293b; /* Slate 800 */
+/* Typography */
+.login-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
 }
 
-.modern-input {
-    border-radius: 8px;
-    padding: 10px 15px;
-    border: 1px solid #e2e8f0;
-    transition: all 0.2s ease;
+.login-subtitle {
+    color: #64748b;
     font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+}
+
+.form-label-custom {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Modern Input */
+.modern-input {
+    background-color: #fff;
+    border: 1px solid #cbd5e1; /* Thinner border */
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    color: #1e293b;
+    transition: all 0.2s ease-in-out;
+    width: 100%;
+    margin-bottom: 0.5rem;
 }
 
 .modern-input:focus {
+    background-color: #fff;
     border-color: #f97316;
-    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15); /* Softer shadow */
+    outline: none;
 }
 
+.modern-input::placeholder {
+    color: #94a3b8;
+}
+
+/* Button Styling */
 .modern-btn {
-    border-radius: 8px;
+    background: #f97316; /* Solid brand color or gradient */
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.2);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+    letter-spacing: 0.01em;
+    width: 100%;
+    margin-top: 1rem;
 }
 
 .modern-btn:hover {
-    opacity: 0.9;
-    box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(249, 115, 22, 0.35);
+    background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
 }
 
-/* Animations */
-@keyframes fadeIn {
+.modern-btn:active {
+    transform: translateY(0);
+}
+
+.modern-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Validation Styling */
+.is-invalid {
+    border-color: #ef4444 !important;
+    background-color: #fff1f2 !important;
+}
+
+.invalid-feedback {
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+    display: block;
+}
+
+/* Link Styling */
+.forgot-password-link {
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+    display: inline-block;
+    margin-top: 1.5rem;
+}
+
+.forgot-password-link:hover {
+    color: #f97316;
+}
+
+/* Footer Copyright */
+.login-footer {
+    position: absolute;
+    bottom: 2rem;
+    width: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+    font-weight: 400;
+}
+
+/* Card Animation */
+@keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
 .login-card {
-    animation: fadeIn 0.6s ease-out;
+    animation: fadeInUp 0.5s ease-out;
 }
