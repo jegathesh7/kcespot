@@ -17,9 +17,9 @@ exports.register = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (user && user.isVerified) {
-      return res.status(400).json({
+      return res.status(409).json({
         status: "failed",
-        statusCode: 400,
+        statusCode: 409,
         message: "User already exists",
       });
     }
@@ -54,13 +54,18 @@ exports.register = async (req, res) => {
     // Send Email
     const subject = "Verify Your Account - KCE Spot";
     const text = `Your OTP for verification is ${otp}. It expires in 15 minutes.`;
-    const templateId = "d-a36638f79d4445a2944149b9190bc816"; // Consider moving to .env
-    const dynamicData = {
-      otp: otp,
-      name: name,
-    };
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #004d99;">Verify Your Account</h2>
+        <p>Hi ${name},</p>
+        <p>Your OTP for verification is:</p>
+        <h1 style="background: #f4f4f4; padding: 10px; display: inline-block; border-radius: 5px;">${otp}</h1>
+        <p>This OTP expires in 15 minutes.</p>
+        <p>If you did not request this, please ignore this email.</p>
+      </div>
+    `;
 
-    await sendEmail(email, subject, null, null, templateId, dynamicData);
+    await sendEmail(email, subject, text, html);
 
     res.status(200).json({
       status: "success",
@@ -166,14 +171,17 @@ exports.resendRegistrationOtp = async (req, res) => {
 
     const subject = "Resend OTP - Verify Your Account";
     const text = `Your new OTP for verification is ${otp}.`;
-    const templateId = "d-a36638f79d4445a2944149b9190bc816";
-    // console.log()
-    const dynamicData = {
-      otp: otp,
-      name: user.name,
-    };
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #004d99;">Resend OTP</h2>
+        <p>Hi ${user.name},</p>
+        <p>Your new OTP for verification is:</p>
+        <h1 style="background: #f4f4f4; padding: 10px; display: inline-block; border-radius: 5px;">${otp}</h1>
+        <p>This OTP expires in 15 minutes.</p>
+      </div>
+    `;
 
-    await sendEmail(email, subject, null, null, templateId, dynamicData);
+    await sendEmail(email, subject, text, html);
 
     res.status(200).json({
       status: "success",
@@ -276,13 +284,18 @@ exports.forgotPassword = async (req, res) => {
 
     const subject = "Password Reset OTP - KCE Spot";
     const text = `Your OTP for password reset is ${otp}.`;
-    const templateId = "d-a36638f79d4445a2944149b9190bc816";
-    const dynamicData = {
-      otp: otp,
-      name: user.name,
-    };
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #004d99;">Password Reset</h2>
+        <p>Hi ${user.name},</p>
+        <p>Your OTP for password reset is:</p>
+        <h1 style="background: #f4f4f4; padding: 10px; display: inline-block; border-radius: 5px;">${otp}</h1>
+        <p>This OTP expires in 15 minutes.</p>
+        <p>If you did not request a password reset, please ignore this email.</p>
+      </div>
+    `;
 
-    await sendEmail(email, subject, null, null, templateId, dynamicData);
+    await sendEmail(email, subject, text, html);
 
     res.status(200).json({
       status: "success",

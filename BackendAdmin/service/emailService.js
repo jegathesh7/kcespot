@@ -1,28 +1,32 @@
-const sgMail = require("@sendgrid/mail");
+const nodemailer = require("nodemailer");
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT, // 587 or 465
+  secure: process.env.EMAIL_SECURE === "true", // true for 465, false for other ports
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
-const sendEmail = async (to, subject, text, html, templateId = null, dynamicTemplateData = {}) => {
-  const msg = {
-    to,
-    from: process.env.SENDGRID_EMAIL, // verified sender
-    subject,
-  };
+const sendEmail = async (to, subject, text, html) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to,
+      subject,
+      text,
+      html,
+    };
 
-  if (text) {
-    msg.text = text;
+    const info = await transporter.sendMail(mailOptions);
+    // console.log("Email sent: %s", info.messageId);
+    return info;
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw error;
   }
-
-  if (html) {
-    msg.html = html;
-  }
-
-  if (templateId) {
-    msg.templateId = templateId;
-    msg.dynamic_template_data = dynamicTemplateData;
-  }
-
-  await sgMail.send(msg);
 };
 
 module.exports = sendEmail;
