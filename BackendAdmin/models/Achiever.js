@@ -20,6 +20,12 @@ const achieverSchema = new mongoose.Schema(
     eventDate: Date,
     posterImage: String,
     students: [studentSchema],
+    reactions: {
+        like: { type: Number, default: 0 },
+        heart: { type: Number, default: 0 },
+        clap: { type: Number, default: 0 },
+        fire: { type: Number, default: 0 }
+    },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
