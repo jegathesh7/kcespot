@@ -81,13 +81,13 @@ export default function UsersTable({
       ) : (
         <>
           <div className="modern-card table-responsive">
-            <Table className="custom-table mb-0 align-middle">
+            <Table className="custom-table mb-0 align-middle text-center">
               <thead>
                 <tr>
-                  <th className="ps-4" style={{ width: "25%" }}>
+                  <th className="ps-4" style={{ width: "15%" }}>
                     User Details
                   </th>
-                  <th style={{ width: "15%" }}>College</th>
+                  <th style={{ width: "25%" }}>College</th>
                   <th style={{ width: "25%" }}>Email</th>
                   <th style={{ width: "10%" }}>Role</th>
                  
