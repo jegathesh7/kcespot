@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { Container, Card, Form, Button, Alert, Spinner } from "react-bootstrap";
+import { Container, Card, Form, Button, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import "./auth.css";
+import Swal from "sweetalert2";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [serverError, setServerError] = useState("");
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -34,7 +34,6 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setServerError("");
 
     if (!validateForm()) return;
 
@@ -42,51 +41,96 @@ const LoginPage = () => {
     try {
       const response = await api.post("/auth/login", { email, password });
 
-      // Assuming response.data contains token and user info
-      // Store token in localStorage
-
       if (response.data.message === "Login successful") {
-        // localStorage.setItem("token", response.data.token); // No longer needed
         localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        // Optional: Show success alert before redirecting
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        });
+        Toast.fire({
+          icon: "success",
+          title: "Signed in successfully",
+        });
+
         navigate("/achievers"); // Redirect to dashboard
       } else {
-        setServerError("Login failed. No token received.");
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: "No token received.",
+          confirmButtonColor: "#f97316",
+        });
       }
     } catch (error) {
       console.error("Login error:", error);
+      let errorMsg = "Something went wrong. Please try again.";
       if (
         error.response &&
         error.response.data &&
         error.response.data.message
       ) {
-        setServerError(error.response.data.message);
-      } else {
-        setServerError("Something went wrong. Please try again.");
+        errorMsg = error.response.data.message;
       }
+
+      Swal.fire({
+        icon: "error",
+        title: "Login Error",
+        text: errorMsg,
+        confirmButtonColor: "#f97316",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-page d-flex align-items-center justify-content-center vh-100 bg-light">
-      <Container style={{ maxWidth: "400px" }}>
+    <div className="login-page d-flex align-items-center justify-content-center vh-100">
+      <Container>
         <Card className="login-card shadow-lg border-0">
-          <Card.Body className="p-5">
+          <Card.Body>
             <div className="text-center mb-4">
-              <h3 className="fw-bold color2">Welcome Back</h3>
-              <p className="text-muted small">Sign in to your account</p>
+              {/* Optional: Logo Placeholder */}
+              <div className="mb-4">
+                <div
+                  style={{
+                    background: "rgba(249, 115, 22, 0.1)",
+                    padding: "12px",
+                    borderRadius: "12px",
+                    display: "inline-block",
+                  }}
+                >
+                  <svg
+                    width="40"
+                    height="40"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#f97316"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="login-title">Welcome Back</h3>
+              <p className="login-subtitle">
+                Enter your credentials to access the admin panel.
+              </p>
             </div>
-
-            {serverError && (
-              <Alert variant="danger" className="text-center small py-2">
-                {serverError}
-              </Alert>
-            )}
 
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3" controlId="formBasicEmail">
-                <Form.Label className="small fw-bold text-secondary">
+                <Form.Label className="form-label-custom">
                   Email Address
                 </Form.Label>
                 <Form.Control
@@ -106,9 +150,7 @@ const LoginPage = () => {
               </Form.Group>
 
               <Form.Group className="mb-4" controlId="formBasicPassword">
-                <Form.Label className="small fw-bold text-secondary">
-                  Password
-                </Form.Label>
+                <Form.Label className="form-label-custom">Password</Form.Label>
                 <Form.Control
                   type="password"
                   placeholder="Password"
@@ -129,20 +171,16 @@ const LoginPage = () => {
               <Button
                 variant="primary"
                 type="submit"
-                className="w-100 py-2 fw-bold modern-btn"
+                className="modern-btn"
                 disabled={loading}
-                style={{
-                  background: "linear-gradient(45deg, #f97316, #ea580c)",
-                  border: "none",
-                }}
               >
                 {loading ? <Spinner animation="border" size="sm" /> : "Sign In"}
               </Button>
             </Form>
 
             {/* Optional: Forgot password link */}
-            <div className="text-center mt-3">
-              <a href="#" className="text-muted small text-decoration-none">
+            <div className="text-center">
+              <a href="#" className="forgot-password-link">
                 Forgot password?
               </a>
             </div>
@@ -150,7 +188,7 @@ const LoginPage = () => {
         </Card>
 
         <div className="text-center mt-4">
-          <p className="text-muted small">
+          <p className="login-footer">
             &copy; {new Date().getFullYear()} KCE Spot Admin. All rights
             reserved.
           </p>
