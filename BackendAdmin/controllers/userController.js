@@ -14,10 +14,8 @@ exports.getUsers = async (req, res) => {
   try {
     const { page = 1, limit = 10, search, college } = req.query;
     
-    // Build Query
     const query = {};
     
-    // Search by Name or Email
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },

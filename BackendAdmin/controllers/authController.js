@@ -19,7 +19,7 @@ exports.register = async (req, res) => {
       collegeName,
       email,
       password: hashedPassword,
-      role: role || "user", // default user
+      role: role || "user", 
     });
 
     res.status(201).json({
@@ -39,12 +39,13 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
+    // console.log(email, password);
     const user = await User.findOne({ email });
     if (!user)
       return res.status(400).json({ message: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
+    
     if (!isMatch)
       return res.status(400).json({ message: "Invalid password" });
 
@@ -58,15 +59,23 @@ exports.login = async (req, res) => {
       { expiresIn: "1d" }
     );
 
+    // Set Cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // false in dev
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    });
+
     res.json({
       message: "Login successful",
-      token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
       },
+      // Token is in cookie now
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
