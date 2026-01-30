@@ -21,6 +21,7 @@ app.use("/api/events", require("./routes/eventRoutes"));
 app.use("/api/achievers", require("./routes/achieverRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/unstop", require("./routes/proxyRoutes"));
 
 
 const PORT = process.env.PORT || 5000;

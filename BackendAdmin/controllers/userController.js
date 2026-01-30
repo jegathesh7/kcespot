@@ -12,8 +12,38 @@ exports.createUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
-    res.json(users);
+    const { page = 1, limit = 10, search, college } = req.query;
+    
+    // Build Query
+    const query = {};
+    
+    // Search by Name or Email
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } }
+      ];
+    }
+    
+    // Filter by College
+    if (college) {
+      query.collegeName = college;
+    }
+
+    const count = await User.countDocuments(query);
+    
+    const users = await User.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    res.json({
+      users,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+      totalUsers: count
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

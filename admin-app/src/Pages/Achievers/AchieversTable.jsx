@@ -93,10 +93,6 @@ export default function AchieversTable({
     }
   };
 
-  if (loading) {
-    return <TablePlaceholder />;
-  }
-
   return (
     <>
       {/* Professional Toolbar */}
@@ -161,232 +157,240 @@ export default function AchieversTable({
         </div>
       </div>
 
-      <div className="modern-card table-responsive">
-        <Table className="custom-table mb-0 align-middle">
-          <thead>
-            <tr>
-              <th className="ps-4" style={{ width: "30%" }}>
-                Achievement Details
-              </th>
-              <th style={{ width: "10%" }}>College</th>
-              <th style={{ width: "10%" }}>Year</th>
-              <th style={{ width: "10%" }}>Category</th>
-              <th style={{ width: "20%" }}>Reactions</th>
-              <th className="text-center" style={{ width: "10%" }}>
-                Evidence
-              </th>
-              <th className="text-center" style={{ width: "10%" }}>
-                Status
-              </th>
-              <th className="text-end pe-4" style={{ width: "5%" }}>
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {data && data.length > 0 ? (
-              data.map((a) => (
-                <tr key={a._id}>
-                  <td className="ps-4">
-                    <div className="profile-cell-container">
-                      <div className="profile-info">
-                        <span
-                          className="profile-name text-truncate"
-                          style={{ maxWidth: "300px" }}
-                          title={a.name}
-                        >
-                          {a.name}
-                        </span>
-                        <span className="profile-subtitle">
-                          {a.eventDate
-                            ? new Date(a.eventDate).toLocaleDateString(
-                                undefined,
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                },
-                              )
-                            : "No Date"}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    {a.college ? (
-                      <span
-                        className={`modern-badge ${getBadgeClassOfCollege(a.college)}`}
-                      >
-                        {a.college}
-                      </span>
-                    ) : (
-                      <span className="text-muted">-</span>
-                    )}
-                  </td>
-                  <td>
-                    <span className="fw-medium text-dark">{a.batch}</span>
-                  </td>
-                  <td>
-                    <span className="modern-badge badge-category">
-                      {a.category}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="d-flex align-items-center gap-3">
-                      {/* Like */}
-                      <div
-                        className="d-flex align-items-center gap-1 text-muted small"
-                        title="Likes"
-                      >
-                        <ThumbUpIcon
-                          style={{ fontSize: "16px", color: "#64748b" }}
-                        />
-                        <span className="fw-semibold">
-                          {a.reactions?.like || 0}
-                        </span>
-                      </div>
-                      {/* Heart */}
-                      <div
-                        className="d-flex align-items-center gap-1 text-muted small"
-                        title="Hearts"
-                      >
-                        <FavoriteIcon
-                          style={{ fontSize: "16px", color: "#ef4444" }}
-                        />
-                        <span className="fw-semibold">
-                          {a.reactions?.heart || 0}
-                        </span>
-                      </div>
-                      {/* Clap */}
-                      <div
-                        className="d-flex align-items-center gap-1 text-muted small"
-                        title="Claps"
-                      >
-                        <CelebrationIcon
-                          style={{ fontSize: "16px", color: "#eab308" }}
-                        />
-                        <span className="fw-semibold">
-                          {a.reactions?.clap || 0}
-                        </span>
-                      </div>
-                      {/* Fire */}
-                      <div
-                        className="d-flex align-items-center gap-1 text-muted small"
-                        title="Fire"
-                      >
-                        <LocalFireDepartmentIcon
-                          style={{ fontSize: "16px", color: "#f97316" }}
-                        />
-                        <span className="fw-semibold">
-                          {a.reactions?.fire || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="text-center">
-                    {a.posterImage ? (
-                      <Tooltip title="View Evidence">
-                        <Button
-                          variant="light"
-                          className="action-btn mx-auto"
-                          onClick={() => handleViewImage(a.name, a.posterImage)}
-                        >
-                          <VisibilityIcon fontSize="small" />
-                        </Button>
-                      </Tooltip>
-                    ) : (
-                      <span className="text-muted small">-</span>
-                    )}
-                  </td>
-                  <td className="text-center">
-                    <div className="status-wrapper">
-                      <Form.Check
-                        type="switch"
-                        id={`status-${a._id}`}
-                        checked={a.status}
-                        onChange={() => handleStatusClick(a)}
-                        style={{
-                          cursor: "pointer",
-                          margin: 0,
-                          minHeight: "auto",
-                        }}
-                      />
-                      <span
-                        className={`status-label ${a.status ? "text-success" : "text-secondary"}`}
-                      >
-                        {a.status ? "Active" : "Closed"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="pe-4 text-end">
-                    <div className="d-flex justify-content-end gap-1">
-                      <Tooltip title="Edit" className="text-primary">
-                        <button
-                          className="action-btn edit"
-                          onClick={() => onEdit(a)}
-                        >
-                          <EditIcon fontSize="small" />
-                        </button>
-                      </Tooltip>
-                      <Tooltip title="Delete" className="text-danger">
-                        <button
-                          className="action-btn delete"
-                          onClick={() => handleDeleteClick(a._id, a.name)}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </button>
-                      </Tooltip>
-                    </div>
-                  </td>
+      {loading ? (
+        <TablePlaceholder />
+      ) : (
+        <>
+          <div className="modern-card table-responsive">
+            <Table className="custom-table mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th className="ps-4" style={{ width: "30%" }}>
+                    Achievement Details
+                  </th>
+                  <th style={{ width: "10%" }}>College</th>
+                  <th style={{ width: "10%" }}>Year</th>
+                  <th style={{ width: "10%" }}>Category</th>
+                  <th style={{ width: "20%" }}>Reactions</th>
+                  <th className="text-center" style={{ width: "10%" }}>
+                    Images
+                  </th>
+                  <th className="text-center" style={{ width: "10%" }}>
+                    Status
+                  </th>
+                  <th className="text-end pe-4" style={{ width: "5%" }}>
+                    Actions
+                  </th>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="text-center py-5">
-                  <div className="d-flex flex-column align-items-center justify-content-center p-4">
-                    <div className="bg-light rounded-circle p-3 mb-3">
-                      <SearchIcon
-                        className="text-secondary opacity-50"
-                        style={{ fontSize: "32px" }}
-                      />
-                    </div>
-                    <h6 className="text-secondary fw-bold mb-1">
-                      No achievements found
-                    </h6>
-                    <p className="text-muted small mb-0">
-                      Try adjusting your search or filters.
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </Table>
-      </div>
+              </thead>
+              <tbody>
+                {data && data.length > 0 ? (
+                  data.map((a) => (
+                    <tr key={a._id}>
+                      <td className="ps-4">
+                        <div className="profile-cell-container">
+                          <div className="profile-info">
+                            <span
+                              className="profile-name text-truncate"
+                              style={{ maxWidth: "300px" }}
+                              title={a.name}
+                            >
+                              {a.name}
+                            </span>
+                            <span className="profile-subtitle">
+                              {a.eventDate
+                                ? new Date(a.eventDate).toLocaleDateString(
+                                    undefined,
+                                    {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    },
+                                  )
+                                : "No Date"}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        {a.college ? (
+                          <span
+                            className={`modern-badge ${getBadgeClassOfCollege(a.college)}`}
+                          >
+                            {a.college}
+                          </span>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className="fw-medium text-dark">{a.batch}</span>
+                      </td>
+                      <td>
+                        <span className="modern-badge badge-category">
+                          {a.category}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="d-flex align-items-center gap-3">
+                          {/* Like */}
+                          <div
+                            className="d-flex align-items-center gap-1 text-muted small"
+                            title="Likes"
+                          >
+                            <ThumbUpIcon
+                              style={{ fontSize: "16px", color: "#64748b" }}
+                            />
+                            <span className="fw-semibold">
+                              {a.reactions?.like || 0}
+                            </span>
+                          </div>
+                          {/* Heart */}
+                          <div
+                            className="d-flex align-items-center gap-1 text-muted small"
+                            title="Hearts"
+                          >
+                            <FavoriteIcon
+                              style={{ fontSize: "16px", color: "#ef4444" }}
+                            />
+                            <span className="fw-semibold">
+                              {a.reactions?.heart || 0}
+                            </span>
+                          </div>
+                          {/* Clap */}
+                          <div
+                            className="d-flex align-items-center gap-1 text-muted small"
+                            title="Claps"
+                          >
+                            <CelebrationIcon
+                              style={{ fontSize: "16px", color: "#eab308" }}
+                            />
+                            <span className="fw-semibold">
+                              {a.reactions?.clap || 0}
+                            </span>
+                          </div>
+                          {/* Fire */}
+                          <div
+                            className="d-flex align-items-center gap-1 text-muted small"
+                            title="Fire"
+                          >
+                            <LocalFireDepartmentIcon
+                              style={{ fontSize: "16px", color: "#f97316" }}
+                            />
+                            <span className="fw-semibold">
+                              {a.reactions?.fire || 0}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="text-center">
+                        {a.posterImage ? (
+                          <Tooltip title="View Evidence">
+                            <Button
+                              variant="light"
+                              className="action-btn mx-auto"
+                              onClick={() =>
+                                handleViewImage(a.name, a.posterImage)
+                              }
+                            >
+                              <VisibilityIcon fontSize="small" />
+                            </Button>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-muted small">-</span>
+                        )}
+                      </td>
+                      <td className="text-center">
+                        <div className="status-wrapper">
+                          <Form.Check
+                            type="switch"
+                            id={`status-${a._id}`}
+                            checked={a.status}
+                            onChange={() => handleStatusClick(a)}
+                            style={{
+                              cursor: "pointer",
+                              margin: 0,
+                              minHeight: "auto",
+                            }}
+                          />
+                          <span
+                            className={`status-label ${a.status ? "text-success" : "text-secondary"}`}
+                          >
+                            {a.status ? "Active" : "Closed"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="pe-4 text-end">
+                        <div className="d-flex justify-content-end gap-1">
+                          <Tooltip title="Edit" className="text-primary">
+                            <button
+                              className="action-btn edit"
+                              onClick={() => onEdit(a)}
+                            >
+                              <EditIcon fontSize="small" />
+                            </button>
+                          </Tooltip>
+                          <Tooltip title="Delete" className="text-danger">
+                            <button
+                              className="action-btn delete"
+                              onClick={() => handleDeleteClick(a._id, a.name)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </button>
+                          </Tooltip>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="8" className="text-center py-5">
+                      <div className="d-flex flex-column align-items-center justify-content-center p-4">
+                        <div className="bg-light rounded-circle p-3 mb-3">
+                          <SearchIcon
+                            className="text-secondary opacity-50"
+                            style={{ fontSize: "32px" }}
+                          />
+                        </div>
+                        <h6 className="text-secondary fw-bold mb-1">
+                          No achievements found
+                        </h6>
+                        <p className="text-muted small mb-0">
+                          Try adjusting your search or filters.
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </Table>
+          </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="d-flex justify-content-center mt-4">
-          <Pagination className="shadow-sm">
-            <Pagination.Prev
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            />
-            {[...Array(totalPages)].map((_, i) => (
-              <Pagination.Item
-                key={i + 1}
-                active={i + 1 === currentPage}
-                onClick={() => onPageChange(i + 1)}
-              >
-                {i + 1}
-              </Pagination.Item>
-            ))}
-            <Pagination.Next
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            />
-          </Pagination>
-        </div>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="d-flex justify-content-center mt-4">
+              <Pagination className="shadow-sm">
+                <Pagination.Prev
+                  onClick={() => onPageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                />
+                {[...Array(totalPages)].map((_, i) => (
+                  <Pagination.Item
+                    key={i + 1}
+                    active={i + 1 === currentPage}
+                    onClick={() => onPageChange(i + 1)}
+                  >
+                    {i + 1}
+                  </Pagination.Item>
+                ))}
+                <Pagination.Next
+                  onClick={() => onPageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                />
+              </Pagination>
+            </div>
+          )}
+        </>
       )}
 
       {/* Delete Confirmation Modal */}
