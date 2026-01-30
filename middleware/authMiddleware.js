@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 exports.protect = (req, res, next) => {
   let token;
 
+  console.log("Cookies:", req.cookies); // DEBUG
+  console.log("Headers Auth:", req.headers.authorization); // DEBUG
+  
   if (req.cookies.token) {
     token = req.cookies.token;
   } else if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
@@ -11,7 +14,8 @@ exports.protect = (req, res, next) => {
   }
 
   if (!token) {
-    return res.status(401).json({ message: "Not authorized" });
+    console.log("❌ Authentication Failed: No Token Found");
+    return res.status(401).json({ message: "Not authorized - No Token" });
   }
   const clientHeader = req.headers["x-app-client"];
   if (clientHeader !== "kce-admin") {
