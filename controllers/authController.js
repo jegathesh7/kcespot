@@ -197,7 +197,6 @@ exports.resendRegistrationOtp = async (req, res) => {
   }
 };
 
-
 // LOGIN
 exports.login = async (req, res) => {
   try {
@@ -233,14 +232,14 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     // Set Cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "none", 
+       secure: false,       
+  sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -315,10 +314,10 @@ exports.forgotPassword = async (req, res) => {
 exports.verifyResetOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    const user = await User.findOne({ 
-      email, 
-      resetPasswordOtp: otp, 
-      resetPasswordExpires: { $gt: Date.now() } 
+    const user = await User.findOne({
+      email,
+      resetPasswordOtp: otp,
+      resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -347,10 +346,10 @@ exports.verifyResetOtp = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
-    const user = await User.findOne({ 
-      email, 
-      resetPasswordOtp: otp, 
-      resetPasswordExpires: { $gt: Date.now() } 
+    const user = await User.findOne({
+      email,
+      resetPasswordOtp: otp,
+      resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {
