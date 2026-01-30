@@ -7,20 +7,43 @@ import UsersTable from "./UsersTable";
 export default function UsersPage() {
   const [activeTab, setActiveTab] = useState("list");
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
 
+  // Filters and Pagination State
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCollege, setFilterCollege] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // Set from backend
+  const itemsPerPage = 10;
+
   const loadUsers = async () => {
+    setLoading(true);
     try {
-      const res = await api.get("/users");
-      setUsers(res.data);
+      const res = await api.get("/users", {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: searchTerm,
+          college: filterCollege,
+        },
+      });
+      setUsers(res.data.users);
+      setTotalPages(res.data.totalPages);
     } catch (err) {
       console.error("Failed to load users", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    // Debounce search
+    const timer = setTimeout(() => {
+      loadUsers();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentPage, searchTerm, filterCollege]);
 
   const handleEdit = (user) => {
     setEditingItem(user);
@@ -63,16 +86,14 @@ export default function UsersPage() {
     <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
         <div>
-          <h2 className="fw-bold text-primary mb-0">User Management</h2>
-          <p className="text-muted small mb-0">
-            Manage registered users
-          </p>
+          <h2 className="fw-bold color2 mb-0">User Management</h2>
+          <p className="text-muted small mb-0">Manage registered users</p>
         </div>
       </div>
 
       <Nav
-        variant="tabs"
-        className="mb-4"
+        variant="pills"
+        className="modern-tabs mb-4"
         activeKey={activeTab}
         onSelect={(k) => {
           setActiveTab(k);
@@ -84,14 +105,28 @@ export default function UsersPage() {
             View List
           </Nav.Link>
         </Nav.Item>
-        
       </Nav>
 
       {activeTab === "list" && (
         <UsersTable
           data={users}
+          loading={loading}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          // Pagination & Filtering Props
+          searchTerm={searchTerm}
+          onSearchChange={(val) => {
+            setSearchTerm(val);
+            setCurrentPage(1); // Reset page on search
+          }}
+          filterCollege={filterCollege}
+          onFilterChange={(val) => {
+            setFilterCollege(val);
+            setCurrentPage(1); // Reset page on filter
+          }}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
         />
       )}
 
