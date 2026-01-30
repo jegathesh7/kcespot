@@ -4,7 +4,7 @@ import Header from "./component/Header";
 import AchieversPage from "./Pages/Achievers/AchieversPage";
 import EventsPage from "./Pages/Events/EventsPage";
 import Sidebar from "./component/Sidebar";
-import UsersPage from "./Pages/Users/UsersPage";
+import UsersPage from "./Pages/User/UsersPage";
 import "./App.css";
 
 function App() {

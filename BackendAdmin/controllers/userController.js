@@ -1,7 +1,6 @@
-import User from "../models/User.js";
+const User = require("../models/User");
 
-
-export const createUser = async (req, res) => {
+exports.createUser = async (req, res) => {
   try {
     const user = new User(req.body);
     await user.save();
@@ -11,8 +10,7 @@ export const createUser = async (req, res) => {
   }
 };
 
-
-export const getUsers = async (req, res) => {
+exports.getUsers = async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
     res.json(users);
@@ -21,8 +19,7 @@ export const getUsers = async (req, res) => {
   }
 };
 
-
-export const updateUser = async (req, res) => {
+exports.updateUser = async (req, res) => {
   try {
     const updated = await User.findByIdAndUpdate(
       req.params.id,
@@ -35,8 +32,7 @@ export const updateUser = async (req, res) => {
   }
 };
 
-
-export const deleteUser = async (req, res) => {
+exports.deleteUser = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: "User deleted successfully" });
