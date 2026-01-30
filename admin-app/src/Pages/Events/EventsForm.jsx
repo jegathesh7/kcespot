@@ -27,7 +27,17 @@ const EventsForm = forwardRef(
     useImperativeHandle(ref, () => ({
       submitForm: () => {
         if (validate()) {
-          onSave(form);
+          const formData = new FormData();
+          Object.keys(form).forEach((key) => {
+            if (key === "eventImage") {
+              if (form[key] instanceof File) {
+                formData.append("eventImage", form[key]);
+              }
+            } else {
+              formData.append(key, form[key]);
+            }
+          });
+          onSave(formData);
           return true;
         }
         return false;
@@ -50,8 +60,7 @@ const EventsForm = forwardRef(
       if (!form.visibility) newErrors.visibility = "Visibility is required";
       if (!form.targetAudience.trim())
         newErrors.targetAudience = "Target Audience is required";
-      if (!form.eventImage.trim())
-        newErrors.eventImage = "Image URL is required";
+      if (!form.eventImage) newErrors.eventImage = "Event Image is required";
 
       if (
         form.startDate &&
@@ -91,10 +100,11 @@ const EventsForm = forwardRef(
     }, [initialData]);
 
     const handleChange = (e) => {
-      const { name, value, type, checked } = e.target;
+      const { name, value, type, checked, files } = e.target;
       setForm({
         ...form,
-        [name]: type === "checkbox" ? checked : value,
+        [name]:
+          type === "checkbox" ? checked : type === "file" ? files[0] : value,
       });
 
       // Clear error
@@ -110,7 +120,17 @@ const EventsForm = forwardRef(
     const handleInternalSubmit = (e) => {
       e.preventDefault();
       if (validate()) {
-        onSave(form);
+        const formData = new FormData();
+        Object.keys(form).forEach((key) => {
+          if (key === "eventImage") {
+            if (form[key] instanceof File) {
+              formData.append("eventImage", form[key]);
+            }
+          } else {
+            formData.append(key, form[key]);
+          }
+        });
+        onSave(formData);
       }
     };
 
@@ -234,14 +254,13 @@ const EventsForm = forwardRef(
               <Col md={12}>
                 <Form.Group controlId="formEventImage">
                   <Form.Label>
-                    Image URL <span className="text-danger">*</span>
+                    Event Image <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
-                    type="text"
+                    type="file"
                     name="eventImage"
-                    value={form.eventImage}
                     onChange={handleChange}
-                    placeholder="https://..."
+                    accept="image/*"
                     isInvalid={!!errors.eventImage}
                     className="shadow-none"
                     style={{ borderRadius: "6px" }}
@@ -252,7 +271,13 @@ const EventsForm = forwardRef(
                   {form.eventImage && (
                     <div className="mt-3 p-2 border rounded bg-light d-inline-block">
                       <img
-                        src={form.eventImage}
+                        src={
+                          typeof form.eventImage === "string"
+                            ? form.eventImage.startsWith("http")
+                              ? form.eventImage
+                              : `http://localhost:5000/${form.eventImage.replace(/\\/g, "/")}`
+                            : URL.createObjectURL(form.eventImage)
+                        }
                         alt="Preview"
                         className="rounded"
                         style={{ maxHeight: "150px" }}
@@ -274,7 +299,7 @@ const EventsForm = forwardRef(
               <Col md={4} className="mb-3 mb-md-0">
                 <Form.Group controlId="formStartDate">
                   <Form.Label>
-                    Start Date <span className="text-danger">*</span>
+                    Registration Start Date <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     type="date"
@@ -296,7 +321,7 @@ const EventsForm = forwardRef(
               <Col md={4} className="mb-3 mb-md-0">
                 <Form.Group controlId="formEndDate">
                   <Form.Label>
-                    End Date <span className="text-danger">*</span>
+                    Registration End Date <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     type="date"

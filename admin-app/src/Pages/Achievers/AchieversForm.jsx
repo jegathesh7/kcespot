@@ -17,14 +17,43 @@ const AchieversForm = forwardRef(
       eventDate: "",
       posterImage: "",
       students: [],
+      otherCategory: "",
     });
+
+    const PREDEFINED_CATEGORIES = [
+      "Academics",
+      "Placement",
+      "Hackathon",
+      "Sports",
+    ];
 
     const [errors, setErrors] = useState({});
 
     useImperativeHandle(ref, () => ({
       submitForm: () => {
         if (validate()) {
-          onSave(form);
+          const formData = new FormData();
+          Object.keys(form).forEach((key) => {
+            if (key === "students") {
+              formData.append("students", JSON.stringify(form.students));
+            } else if (key === "posterImage") {
+              if (form[key] instanceof File) {
+                formData.append("posterImage", form[key]);
+              }
+            } else if (key === "category") {
+              // If category is 'Others', separate logic might apply, but generally we want the custom value
+              if (form.category === "Others") {
+                formData.append("category", form.otherCategory);
+              } else {
+                formData.append("category", form.category);
+              }
+            } else if (key === "otherCategory") {
+              // Skip appending this as a separate field, integrated into 'category' above
+            } else {
+              formData.append(key, form[key]);
+            }
+          });
+          onSave(formData);
           return true;
         }
         return false;
@@ -34,11 +63,21 @@ const AchieversForm = forwardRef(
     useEffect(() => {
       if (initialData) {
         // ... existing initialization logic ...
+        // Determine initial category state
+        let initCategory = initialData.category || "";
+        let initOtherCategory = "";
+
+        if (initCategory && !PREDEFINED_CATEGORIES.includes(initCategory)) {
+          initOtherCategory = initCategory;
+          initCategory = "Others";
+        }
+
         setForm({
           name: initialData.name || "",
           college: initialData.college || "",
           batch: initialData.batch || "",
-          category: initialData.category || "",
+          category: initCategory,
+          otherCategory: initOtherCategory,
           description: initialData.description || "",
           status: initialData.status !== undefined ? initialData.status : true,
           eventDate: initialData.eventDate
@@ -58,11 +97,22 @@ const AchieversForm = forwardRef(
     }, [initialData]);
 
     const handleChange = (e) => {
-      const { name, value, type, checked } = e.target;
-      setForm({
-        ...form,
-        [name]: type === "checkbox" ? checked : value,
-      });
+      const { name, value, type, checked, files } = e.target;
+
+      // If switching away from 'Others', clear the custom input
+      if (name === "category" && value !== "Others") {
+        setForm({
+          ...form,
+          category: value,
+          otherCategory: "",
+        });
+      } else {
+        setForm({
+          ...form,
+          [name]:
+            type === "checkbox" ? checked : type === "file" ? files[0] : value,
+        });
+      }
       // Clear error for this field
       if (errors[name]) {
         setErrors({ ...errors, [name]: null });
@@ -75,6 +125,12 @@ const AchieversForm = forwardRef(
     const handleStudentChange = (index, field, value) => {
       const updated = [...form.students];
       updated[index][field] = value;
+
+      // If updating imageFile, also update imageUrl for preview
+      if (field === "imageFile" && value instanceof File) {
+        updated[index]["imageUrl"] = URL.createObjectURL(value);
+      }
+
       setForm({ ...form, students: updated });
       if (setIsDirty) setIsDirty(true);
     };
@@ -85,7 +141,13 @@ const AchieversForm = forwardRef(
       const students = Array.from(
         { length: count },
         (_, i) =>
-          oldStudents[i] || { name: "", year: "", dept: "", imageUrl: "" },
+          oldStudents[i] || {
+            name: "",
+            year: "",
+            dept: "",
+            imageUrl: "",
+            imageFile: null,
+          },
       );
       setForm({ ...form, students });
       if (setIsDirty) setIsDirty(true);
@@ -96,19 +158,22 @@ const AchieversForm = forwardRef(
       if (!form.name.trim()) newErrors.name = "Achievement Name is required";
       if (!form.college.trim()) newErrors.college = "College Name is required";
       if (!form.category) newErrors.category = "Category is required";
+      if (form.category === "Others" && !form.otherCategory.trim()) {
+        newErrors.otherCategory = "Please specify the category";
+      }
       if (!form.batch.trim()) newErrors.batch = "Batch is required";
       if (!form.description.trim())
         newErrors.description = "Description is required";
+      if (!form.eventDate) newErrors.eventDate = "Event Date is required";
 
       // URL Validation Regex
       const urlPattern =
         /^(https?:\/\/)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$/;
 
       if (entryType === "image") {
-        if (!form.posterImage.trim()) {
-          newErrors.posterImage = "Poster Image URL is required";
-        } else if (!urlPattern.test(form.posterImage)) {
-          newErrors.posterImage = "Please enter a valid URL";
+        if (!form.posterImage) {
+          // Basic check: if strictly empty string and no file
+          newErrors.posterImage = "Poster Image is required";
         }
       }
 
@@ -127,10 +192,8 @@ const AchieversForm = forwardRef(
             const nameInvalid = !s.name.trim();
             const yearInvalid = !s.year.trim();
             const deptInvalid = !s.dept.trim();
-            const urlInvalid =
-              s.imageUrl && s.imageUrl.trim() && !urlPattern.test(s.imageUrl);
 
-            return nameInvalid || yearInvalid || deptInvalid || urlInvalid;
+            return nameInvalid || yearInvalid || deptInvalid;
           });
 
           if (invalidStudents) {
@@ -147,7 +210,36 @@ const AchieversForm = forwardRef(
     const submit = (e) => {
       e.preventDefault();
       if (validate()) {
-        onSave(form);
+        const formData = new FormData();
+        Object.keys(form).forEach((key) => {
+          if (key === "students") {
+            // Stringify students array, but first we can optionally clean it or just rely on backend to update urls
+            // We pass the full array. Backend will update imageUrl for those with matching files.
+            formData.append("students", JSON.stringify(form.students));
+
+            // Append student images
+            form.students.forEach((student, index) => {
+              if (student.imageFile) {
+                formData.append(`studentImage_${index}`, student.imageFile);
+              }
+            });
+          } else if (key === "posterImage") {
+            if (form[key] instanceof File) {
+              formData.append("posterImage", form[key]);
+            }
+          } else if (key === "category") {
+            if (form.category === "Others") {
+              formData.append("category", form.otherCategory);
+            } else {
+              formData.append("category", form.category);
+            }
+          } else if (key === "otherCategory") {
+            // Skip
+          } else {
+            formData.append(key, form[key]);
+          }
+        });
+        onSave(formData);
       }
     };
 
@@ -266,6 +358,25 @@ const AchieversForm = forwardRef(
                   <Form.Control.Feedback type="invalid">
                     {errors.category}
                   </Form.Control.Feedback>
+
+                  {/* Custom Category Input */}
+                  {form.category === "Others" && (
+                    <div className="mt-2">
+                      <Form.Control
+                        type="text"
+                        name="otherCategory"
+                        placeholder="Enter custom category"
+                        value={form.otherCategory}
+                        onChange={handleChange}
+                        isInvalid={!!errors.otherCategory}
+                        className="shadow-none"
+                        style={{ borderRadius: "6px" }}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.otherCategory}
+                      </Form.Control.Feedback>
+                    </div>
+                  )}
                 </Form.Group>
               </Col>
               <Col md={4}>
@@ -279,9 +390,13 @@ const AchieversForm = forwardRef(
                     onClick={(e) =>
                       e.target.showPicker && e.target.showPicker()
                     }
+                    isInvalid={!!errors.eventDate}
                     className="shadow-none"
                     style={{ borderRadius: "6px" }}
                   />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.eventDate}
+                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
             </Row>
@@ -338,7 +453,7 @@ const AchieversForm = forwardRef(
             <div className="d-flex gap-4 mb-4">
               <Form.Check
                 type="radio"
-                label="Poster Image URL"
+                label="Poster Image"
                 name="entryType"
                 id="typeImage"
                 value="image"
@@ -368,13 +483,14 @@ const AchieversForm = forwardRef(
               <Col md={12}>
                 {entryType === "image" && (
                   <Form.Group controlId="formPosterImage">
-                    <Form.Label>Poster Image URL</Form.Label>
+                    <Form.Label>
+                      Poster Image <span className="text-danger">*</span>
+                    </Form.Label>
                     <Form.Control
-                      type="text"
+                      type="file"
                       name="posterImage"
-                      value={form.posterImage}
                       onChange={handleChange}
-                      placeholder="https://..."
+                      accept="image/*"
                       isInvalid={!!errors.posterImage}
                       className="shadow-none"
                       style={{ borderRadius: "6px" }}
@@ -382,13 +498,21 @@ const AchieversForm = forwardRef(
                     <Form.Control.Feedback type="invalid">
                       {errors.posterImage}
                     </Form.Control.Feedback>
-                    {form.posterImage && !errors.posterImage && (
+
+                    {/* Preview Logic */}
+                    {form.posterImage && (
                       <div className="mt-3 p-2 border rounded bg-light d-inline-block">
                         <img
-                          src={formatImageUrl(form.posterImage)}
+                          src={
+                            typeof form.posterImage === "string"
+                              ? form.posterImage.startsWith("http")
+                                ? form.posterImage
+                                : `http://localhost:5000/${form.posterImage.replace(/\\/g, "/")}`
+                              : URL.createObjectURL(form.posterImage)
+                          }
                           alt="Preview"
                           className="rounded"
-                          style={{ maxHeight: "120px" }}
+                          style={{ maxHeight: "150px" }}
                         />
                       </div>
                     )}
@@ -402,10 +526,11 @@ const AchieversForm = forwardRef(
                       <Form.Control
                         type="number"
                         min="0"
-                        value={studentCount}
-                        onChange={(e) =>
-                          handleStudentCount(Number(e.target.value))
-                        }
+                        value={studentCount.toString()}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          handleStudentCount(isNaN(val) ? 0 : val);
+                        }}
                         placeholder="e.g. 5"
                         isInvalid={!!errors.studentCount}
                         className="shadow-none"
@@ -417,38 +542,53 @@ const AchieversForm = forwardRef(
                     </Form.Group>
 
                     {form.students.length > 0 && (
-                      <div className="border rounded bg-white">
+                      <div className="card border shadow-sm">
                         <div className="table-responsive">
-                          <table className="table table-sm table-borderless mb-0 align-middle">
-                            <thead className="bg-light border-bottom">
+                          <table className="table table-hover align-middle mb-0">
+                            <thead className="bg-light">
                               <tr>
-                                <th className="ps-3 text-muted small text-uppercase">
+                                <th
+                                  className="ps-4 py-3 text-secondary text-uppercase small fw-bold"
+                                  style={{ width: "5%" }}
+                                >
                                   #
                                 </th>
-                                <th className="text-muted small text-uppercase">
+                                <th
+                                  className="py-3 text-secondary text-uppercase small fw-bold"
+                                  style={{ width: "25%" }}
+                                >
                                   Name <span className="text-danger">*</span>
                                 </th>
-                                <th className="text-muted small text-uppercase">
+                                <th
+                                  className="py-3 text-secondary text-uppercase small fw-bold"
+                                  style={{ width: "15%" }}
+                                >
                                   Year <span className="text-danger">*</span>
                                 </th>
-                                <th className="text-muted small text-uppercase">
+                                <th
+                                  className="py-3 text-secondary text-uppercase small fw-bold"
+                                  style={{ width: "20%" }}
+                                >
                                   Dept <span className="text-danger">*</span>
                                 </th>
-                                <th className="text-muted small text-uppercase">
+                                <th
+                                  className="py-3 text-secondary text-uppercase small fw-bold"
+                                  style={{ width: "35%" }}
+                                >
                                   Photo URL
                                 </th>
                               </tr>
                             </thead>
                             <tbody>
                               {form.students.map((student, index) => (
-                                <tr key={index} className="border-bottom">
-                                  <td className="ps-3 fw-bold text-muted">
+                                <tr key={index}>
+                                  <td className="ps-4 fw-bold text-muted">
                                     {index + 1}
                                   </td>
-                                  <td>
+                                  <td className="p-2">
                                     <Form.Control
                                       size="sm"
-                                      placeholder="Name"
+                                      placeholder="Student Name"
                                       value={student.name}
                                       onChange={(e) =>
                                         handleStudentChange(
@@ -461,10 +601,9 @@ const AchieversForm = forwardRef(
                                         errors.studentErrors &&
                                         !student.name.trim()
                                       }
-                                      className="border-0 bg-transparent"
                                     />
                                   </td>
-                                  <td>
+                                  <td className="p-2">
                                     <Form.Control
                                       size="sm"
                                       placeholder="Year"
@@ -480,10 +619,9 @@ const AchieversForm = forwardRef(
                                         errors.studentErrors &&
                                         !student.year.trim()
                                       }
-                                      className="border-0 bg-transparent"
                                     />
                                   </td>
-                                  <td>
+                                  <td className="p-2">
                                     <Form.Control
                                       size="sm"
                                       placeholder="Dept"
@@ -499,31 +637,43 @@ const AchieversForm = forwardRef(
                                         errors.studentErrors &&
                                         !student.dept.trim()
                                       }
-                                      className="border-0 bg-transparent"
                                     />
                                   </td>
-                                  <td>
-                                    <Form.Control
-                                      size="sm"
-                                      placeholder="URL"
-                                      value={student.imageUrl}
-                                      onChange={(e) =>
-                                        handleStudentChange(
-                                          index,
-                                          "imageUrl",
-                                          e.target.value,
-                                        )
-                                      }
-                                      isInvalid={
-                                        errors.studentErrors &&
-                                        student.imageUrl &&
-                                        student.imageUrl.trim() !== "" &&
-                                        !/^(https?:\/\/)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$/.test(
-                                          student.imageUrl,
-                                        )
-                                      }
-                                      className="border-0 bg-transparent"
-                                    />
+                                  <td className="p-2">
+                                    <div className="d-flex align-items-center gap-2">
+                                      {student.imageUrl && (
+                                        <img
+                                          src={
+                                            student.imageUrl.startsWith(
+                                              "blob:",
+                                            ) ||
+                                            student.imageUrl.startsWith("http")
+                                              ? student.imageUrl
+                                              : `http://localhost:5000/${student.imageUrl.replace(/\\/g, "/")}`
+                                          }
+                                          alt="Preview"
+                                          className="rounded-circle object-fit-cover"
+                                          style={{
+                                            width: "32px",
+                                            height: "32px",
+                                          }}
+                                        />
+                                      )}
+                                      <Form.Control
+                                        type="file"
+                                        size="sm"
+                                        accept="image/*"
+                                        onChange={(e) =>
+                                          handleStudentChange(
+                                            index,
+                                            "imageFile",
+                                            e.target.files[0],
+                                          )
+                                        }
+                                        className="shadow-none border-secondary-subtle"
+                                        style={{ fontSize: "0.8rem" }}
+                                      />
+                                    </div>
                                   </td>
                                 </tr>
                               ))}
