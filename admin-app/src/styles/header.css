@@ -50,3 +50,7 @@
   font-weight: 600;
   border-bottom: 3px solid #3b82f6;
 }
+/* Hide default caret on custom dropdown toggle */
+.dropdown-toggle::after {
+  display: none !important;
+}
