@@ -6,20 +6,30 @@ exports.protect = (req, res, next) => {
 
   console.log("Cookies:", req.cookies); // DEBUG
   console.log("Headers Auth:", req.headers.authorization); // DEBUG
-  
+
   if (req.cookies.token) {
     token = req.cookies.token;
-  } else if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+  } else if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer ")
+  ) {
     token = req.headers.authorization.split(" ")[1];
   }
 
   if (!token) {
-    console.log("❌ Authentication Failed: No Token Found");
-    return res.status(401).json({ message: "Not authorized - No Token" });
+    return res.status(401).json({
+      status: "failed",
+      statusCode: 401,
+      message: "Not authorized, please login",
+    });
   }
   const clientHeader = req.headers["x-app-client"];
   if (clientHeader !== "kce-admin") {
-      return res.status(401).json({ message: "API access restricted to application only" });
+    return res.status(401).json({
+      status: "failed",
+      statusCode: 401,
+      message: "API access restricted to application only",
+    });
   }
 
   try {
