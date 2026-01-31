@@ -14,13 +14,42 @@ exports.register = async (req, res) => {
   try {
     const { name, collegeName, email, password, role } = req.body;
 
+    // 1. Check for missing fields
+    if (!name || !collegeName || !email || !password) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "All fields (name, collegeName, email, password) are required",
+      });
+    }
+
+    // 2. Validate Email Format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "Invalid email format",
+      });
+    }
+
+    // 3. Validate Password Strength (Min 6 chars)
+    if (password.length < 6) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "Password must be at least 6 characters long",
+      });
+    }
+
     let user = await User.findOne({ email });
 
+    // 4. Check if user already exists and is verified
     if (user && user.isVerified) {
       return res.status(409).json({
         status: "failed",
         statusCode: 409,
-        message: "User already exists",
+        message: "User already registered with this email",
       });
     }
 
@@ -70,14 +99,15 @@ exports.register = async (req, res) => {
     res.status(200).json({
       status: "success",
       statusCode: 200,
-      message: "OTP sent to your email",
+      message: "OTP sent to your email successfully",
     });
   } catch (err) {
     console.error("Register Error:", err);
     res.status(500).json({
       status: "failed",
       statusCode: 500,
-      message: err.message,
+      message: "Internal Server Error. Please try again later.",
+      error: err.message,
     });
   }
 };
@@ -87,12 +117,20 @@ exports.verifyRegistrationOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const user = await User.findOne({ email });
-
-    if (!user) {
+    if (!email || !otp) {
       return res.status(400).json({
         status: "failed",
         statusCode: 400,
+        message: "Email and OTP are required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        status: "failed",
+        statusCode: 404,
         message: "User not found",
       });
     }
@@ -117,7 +155,7 @@ exports.verifyRegistrationOtp = async (req, res) => {
       return res.status(400).json({
         status: "failed",
         statusCode: 400,
-        message: "OTP has expired",
+        message: "OTP has expired. Please request a new one.",
       });
     }
 
@@ -137,7 +175,8 @@ exports.verifyRegistrationOtp = async (req, res) => {
     res.status(500).json({
       status: "failed",
       statusCode: 500,
-      message: err.message,
+      message: "Internal Server Error",
+      error: err.message,
     });
   }
 };
@@ -146,12 +185,21 @@ exports.verifyRegistrationOtp = async (req, res) => {
 exports.resendRegistrationOtp = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email });
 
-    if (!user) {
+    if (!email) {
       return res.status(400).json({
         status: "failed",
         statusCode: 400,
+        message: "Email is required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        status: "failed",
+        statusCode: 404,
         message: "User not found",
       });
     }
@@ -192,7 +240,8 @@ exports.resendRegistrationOtp = async (req, res) => {
     res.status(500).json({
       status: "failed",
       statusCode: 500,
-      message: err.message,
+      message: "Internal Server Error",
+      error: err.message,
     });
   }
 };
@@ -201,29 +250,43 @@ exports.resendRegistrationOtp = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) {
+
+    // 1. Check for missing email or password
+    if (!email || !password) {
       return res.status(400).json({
         status: "failed",
         statusCode: 400,
-        message: "User not found",
+        message: "Email and password are required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    // 2. User not found
+    if (!user) {
+      return res.status(404).json({
+        status: "failed",
+        statusCode: 404,
+        message: "User not found with this email",
       });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+
+    // 3. Invalid Password
     if (!isMatch) {
-      return res.status(400).json({
+      return res.status(401).json({
         status: "failed",
-        statusCode: 400,
+        statusCode: 401,
         message: "Invalid password",
       });
     }
 
-    // Check if user is verified
+    // 4. Check if user is verified
     if (!user.isVerified) {
-      return res.status(400).json({
+      return res.status(401).json({
         status: "failed",
-        statusCode: 400,
+        statusCode: 401,
         message: "Please verify your email address to login",
       });
     }
@@ -238,8 +301,8 @@ exports.login = async (req, res) => {
     // Set Cookie
     res.cookie("token", token, {
       httpOnly: true,
-       secure: true,       
-     sameSite: "none",
+      secure: true,
+      sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -253,12 +316,14 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
       },
+      token: token,
     });
   } catch (err) {
     res.status(500).json({
       status: "failed",
       statusCode: 500,
-      message: err.message,
+      message: "Internal Server Error",
+      error: err.message,
     });
   }
 };
