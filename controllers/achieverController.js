@@ -1,4 +1,5 @@
 const Achiever = require("../models/Achiever");
+const Reaction = require("../models/Reaction");
 
 // CREATE
 exports.createAchiever = async (req, res) => {
@@ -144,32 +145,98 @@ exports.deleteAchiever = async (req, res) => {
 // UPDATE REACTION
 exports.updateReaction = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { reactionType } = req.body; // e.g., "r1", "r2", "r3", "r4", "r5"
+    const { id } = req.params; // Achiever ID
+    const { reactionType } = req.body; // "r1", "r2", "r3", "r4", "r5"
+    const userId = req.user.id; // From authMiddleware
 
     const validReactions = ["r1", "r2", "r3", "r4", "r5"];
-
     if (!validReactions.includes(reactionType)) {
       return res.status(400).json({ message: "Invalid reaction type" });
     }
 
-    const fieldToUpdate = `reactions.${reactionType}`;
+    // 1. Check if user already reacted
+    const existingReaction = await Reaction.findOne({
+      user: userId,
+      achiever: id,
+    });
+    let updatedAchiever;
+    let message = "";
+    let userReaction = null;
 
-    const updatedAchiever = await Achiever.findByIdAndUpdate(
-      id,
-      { $inc: { [fieldToUpdate]: 1 } },
-      { new: true },
-    );
+    if (existingReaction) {
+      if (existingReaction.type === reactionType) {
+        // A. Toggle OFF (Remove reaction)
+        await Reaction.findByIdAndDelete(existingReaction._id);
+
+        // Atomic Decrement
+        updatedAchiever = await Achiever.findByIdAndUpdate(
+          id,
+          { $inc: { [`reactions.${reactionType}`]: -1 } },
+          { new: true },
+        );
+        message = "Reaction removed";
+        userReaction = null;
+      } else {
+        // B. Switch Reaction (e.g., from r1 to r2)
+        const oldType = existingReaction.type;
+
+        // Update existing reaction doc
+        existingReaction.type = reactionType;
+        await existingReaction.save();
+
+        // Atomic Switch: Dec old, Inc new
+        updatedAchiever = await Achiever.findByIdAndUpdate(
+          id,
+          {
+            $inc: {
+              [`reactions.${oldType}`]: -1,
+              [`reactions.${reactionType}`]: 1,
+            },
+          },
+          { new: true },
+        );
+        message = "Reaction updated";
+        userReaction = reactionType;
+      }
+    } else {
+      // C. New Reaction
+      try {
+        await Reaction.create({
+          user: userId,
+          achiever: id,
+          type: reactionType,
+        });
+
+        // Atomic Increment
+        updatedAchiever = await Achiever.findByIdAndUpdate(
+          id,
+          { $inc: { [`reactions.${reactionType}`]: 1 } },
+          { new: true },
+        );
+        message = "Reaction added";
+        userReaction = reactionType;
+      } catch (err) {
+        // Handle duplicate key error (race condition double-click)
+        if (err.code === 11000) {
+          return res
+            .status(409)
+            .json({ message: "You have already reacted to this post." });
+        }
+        throw err;
+      }
+    }
 
     if (!updatedAchiever) {
       return res.status(404).json({ message: "Achiever not found" });
     }
 
     res.json({
-      message: "Reaction updated",
+      message,
       reactions: updatedAchiever.reactions,
+      userReaction,
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
