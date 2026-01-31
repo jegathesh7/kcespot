@@ -4,9 +4,9 @@ const Achiever = require("../models/Achiever");
 exports.createAchiever = async (req, res) => {
   try {
     const entryData = { ...req.body };
-    
+
     // Parse students if it's a string (from FormData)
-    if (typeof entryData.students === 'string') {
+    if (typeof entryData.students === "string") {
       entryData.students = JSON.parse(entryData.students);
     }
 
@@ -24,7 +24,6 @@ exports.createAchiever = async (req, res) => {
         }
       });
     }
-    
 
     const achiever = new Achiever(entryData);
     await achiever.save();
@@ -42,11 +41,10 @@ exports.getAchievers = async (req, res) => {
     const query = { isDeleted: false };
 
     if (search) {
-
       query.$or = [
         { name: { $regex: search, $options: "i" } },
         { college: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } } // Added description for completeness
+        { description: { $regex: search, $options: "i" } }, // Added description for completeness
       ];
     }
 
@@ -55,7 +53,7 @@ exports.getAchievers = async (req, res) => {
     }
 
     const count = await Achiever.countDocuments(query);
-    
+
     const achievers = await Achiever.find(query)
       .sort({ createdAt: -1 })
       .limit(limit * 1)
@@ -78,11 +76,9 @@ exports.updateAchiever = async (req, res) => {
     const { id } = req.params;
     const updateData = { ...req.body };
 
-
-
     // Parse students if it's a string
-    if (typeof updateData.students === 'string') {
-        updateData.students = JSON.parse(updateData.students);
+    if (typeof updateData.students === "string") {
+      updateData.students = JSON.parse(updateData.students);
     }
 
     // Handle File Uploads (Poster + Student Images)
@@ -100,14 +96,14 @@ exports.updateAchiever = async (req, res) => {
     }
 
     // Parse students if it's a string
-    if (typeof updateData.students === 'string') {
+    if (typeof updateData.students === "string") {
       updateData.students = JSON.parse(updateData.students);
     }
 
     const updatedAchiever = await Achiever.findByIdAndUpdate(
       id,
       updateData,
-      { new: true } // return updated document
+      { new: true }, // return updated document
     );
 
     if (!updatedAchiever) {
@@ -132,7 +128,7 @@ exports.deleteAchiever = async (req, res) => {
     const deletedAchiever = await Achiever.findByIdAndUpdate(
       id,
       { isDeleted: true },
-      { new: true }
+      { new: true },
     );
 
     if (!deletedAchiever) {
@@ -140,6 +136,39 @@ exports.deleteAchiever = async (req, res) => {
     }
 
     res.json({ message: "Achiever deleted successfully (Soft Delete)" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// UPDATE REACTION
+exports.updateReaction = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reactionType } = req.body; // e.g., "r1", "r2", "r3", "r4", "r5"
+
+    const validReactions = ["r1", "r2", "r3", "r4", "r5"];
+
+    if (!validReactions.includes(reactionType)) {
+      return res.status(400).json({ message: "Invalid reaction type" });
+    }
+
+    const fieldToUpdate = `reactions.${reactionType}`;
+
+    const updatedAchiever = await Achiever.findByIdAndUpdate(
+      id,
+      { $inc: { [fieldToUpdate]: 1 } },
+      { new: true },
+    );
+
+    if (!updatedAchiever) {
+      return res.status(404).json({ message: "Achiever not found" });
+    }
+
+    res.json({
+      message: "Reaction updated",
+      reactions: updatedAchiever.reactions,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -21,10 +21,11 @@ const achieverSchema = new mongoose.Schema(
     posterImage: String,
     students: [studentSchema],
     reactions: {
-        like: { type: Number, default: 0 },
-        heart: { type: Number, default: 0 },
-        clap: { type: Number, default: 0 },
-        fire: { type: Number, default: 0 }
+        r1: { type: Number, default: 0 },
+        r2: { type: Number, default: 0 },
+        r3: { type: Number, default: 0 },
+        r4: { type: Number, default: 0 },
+        r5:{type:Number,default:0}
     },
     isDeleted: { type: Boolean, default: false },
   },
