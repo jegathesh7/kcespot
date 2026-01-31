@@ -55,10 +55,39 @@ exports.getAchievers = async (req, res) => {
 
     const count = await Achiever.countDocuments(query);
 
-    const achievers = await Achiever.find(query)
+    let achievers = await Achiever.find(query)
       .sort({ createdAt: -1 })
       .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .skip((page - 1) * limit)
+      .lean(); // Use lean() to get plain JS objects
+
+    // ENRICH DATA: Add userReaction field
+    if (req.user && req.user.id) {
+      const achieverIds = achievers.map((a) => a._id);
+
+      const userReactions = await Reaction.find({
+        user: req.user.id,
+        achiever: { $in: achieverIds },
+      });
+
+      // Create a map: achieverId -> reactionType
+      const reactionMap = {};
+      userReactions.forEach((reaction) => {
+        reactionMap[reaction.achiever.toString()] = reaction.type;
+      });
+
+      // Attach to achievers
+      achievers = achievers.map((achiever) => ({
+        ...achiever,
+        userReaction: reactionMap[achiever._id.toString()] || null,
+      }));
+    } else {
+      // If no user is logged in (just in case), ensure field exists as null
+      achievers = achievers.map((achiever) => ({
+        ...achiever,
+        userReaction: null,
+      }));
+    }
 
     res.json({
       data: achievers,
