@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Container, Card, Form, Button, Spinner } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../api/axios";
 import "./auth.css";
 import Swal from "sweetalert2";
@@ -11,6 +11,33 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("sessionExpired")) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.onmouseenter = Swal.stopTimer;
+          toast.onmouseleave = Swal.resumeTimer;
+        },
+      });
+
+      Toast.fire({
+        icon: "warning",
+        title: "Session Expired",
+        text: "Please login again to continue.",
+      });
+
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [location]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -93,7 +120,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-page d-flex align-items-center justify-content-center vh-100">
+    <div className="login-page d-flex align-items-center justify-content-center">
       <Container>
         <Card className="login-card shadow-lg border-0">
           <Card.Body>

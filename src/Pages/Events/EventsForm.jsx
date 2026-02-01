@@ -4,6 +4,7 @@ import { Form, Button, Row, Col, Card } from "react-bootstrap";
 const EventsForm = forwardRef(
   ({ initialData, onSave, onCancel, setIsDirty }, ref) => {
     const isEditMode = !!initialData;
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [form, setForm] = useState({
       title: "",
@@ -25,20 +26,28 @@ const EventsForm = forwardRef(
     const [errors, setErrors] = useState({});
 
     useImperativeHandle(ref, () => ({
-      submitForm: () => {
+      submitForm: async () => {
         if (validate()) {
-          const formData = new FormData();
-          Object.keys(form).forEach((key) => {
-            if (key === "eventImage") {
-              if (form[key] instanceof File) {
-                formData.append("eventImage", form[key]);
+          setIsSubmitting(true);
+          try {
+            const formData = new FormData();
+            Object.keys(form).forEach((key) => {
+              if (key === "eventImage") {
+                if (form[key] instanceof File) {
+                  formData.append("eventImage", form[key]);
+                }
+              } else {
+                formData.append(key, form[key]);
               }
-            } else {
-              formData.append(key, form[key]);
-            }
-          });
-          onSave(formData);
-          return true;
+            });
+            await onSave(formData);
+            return true;
+          } catch (error) {
+            console.error("External submit failed", error);
+            return false;
+          } finally {
+            setIsSubmitting(false);
+          }
         }
         return false;
       },
@@ -60,7 +69,9 @@ const EventsForm = forwardRef(
       if (!form.visibility) newErrors.visibility = "Visibility is required";
       if (!form.targetAudience.trim())
         newErrors.targetAudience = "Target Audience is required";
-      if (!form.eventImage) newErrors.eventImage = "Event Image is required";
+      if (!form.eventImage || form.eventImage === "") {
+        newErrors.eventImage = "Event Image is required";
+      }
 
       if (
         form.startDate &&
@@ -117,20 +128,27 @@ const EventsForm = forwardRef(
 
     // We expose submit via ref, so internal submit is for standard button click
     // But we want to prevent default form submission if wrapped in <form>
-    const handleInternalSubmit = (e) => {
+    const handleInternalSubmit = async (e) => {
       e.preventDefault();
       if (validate()) {
-        const formData = new FormData();
-        Object.keys(form).forEach((key) => {
-          if (key === "eventImage") {
-            if (form[key] instanceof File) {
-              formData.append("eventImage", form[key]);
+        setIsSubmitting(true);
+        try {
+          const formData = new FormData();
+          Object.keys(form).forEach((key) => {
+            if (key === "eventImage") {
+              if (form[key] instanceof File) {
+                formData.append("eventImage", form[key]);
+              }
+            } else {
+              formData.append(key, form[key]);
             }
-          } else {
-            formData.append(key, form[key]);
-          }
-        });
-        onSave(formData);
+          });
+          await onSave(formData);
+        } catch (error) {
+          console.error("Submission failed", error);
+        } finally {
+          setIsSubmitting(false);
+        }
       }
     };
 
@@ -275,7 +293,7 @@ const EventsForm = forwardRef(
                           typeof form.eventImage === "string"
                             ? form.eventImage.startsWith("http")
                               ? form.eventImage
-                              : `http://localhost:5000/${form.eventImage.replace(/\\/g, "/")}`
+                              : `${import.meta.env.VITE_IMAGE_BASE_URL}/${form.eventImage.replace(/\\/g, "/")}`
                             : URL.createObjectURL(form.eventImage)
                         }
                         alt="Preview"
@@ -299,7 +317,8 @@ const EventsForm = forwardRef(
               <Col md={4} className="mb-3 mb-md-0">
                 <Form.Group controlId="formStartDate">
                   <Form.Label>
-                    Registration Start Date <span className="text-danger">*</span>
+                    Registration Start Date{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     type="date"
@@ -513,8 +532,22 @@ const EventsForm = forwardRef(
                 variant="primary"
                 type="submit"
                 className="px-4 fw-medium"
+                disabled={isSubmitting}
               >
-                {isEditMode ? "Save Details" : "Create Event"}
+                {isSubmitting ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    Saving...
+                  </>
+                ) : isEditMode ? (
+                  "Save Details"
+                ) : (
+                  "Create Event"
+                )}
               </Button>
             </div>
           </Form>
