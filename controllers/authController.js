@@ -316,7 +316,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
       },
-      token: token,
+      // token: token,
     });
   } catch (err) {
     res.status(500).json({

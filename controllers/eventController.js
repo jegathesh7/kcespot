@@ -1,18 +1,39 @@
 const Event = require("../models/Event.js");
+const User = require("../models/User.js");
+const { sendEventNotification } = require("../service/pushNotificationService");
 // CREATE event
 exports.createEvent = async (req, res) => {
   try {
     const entryData = { ...req.body };
+
     if (req.file) {
-      entryData.eventImage = req.file.path; // Store file path
+      entryData.eventImage = req.file.path;
     }
+
     const event = new Event(entryData);
-    await event.save();
-    res.status(201).json({ message: "Event saved", event });
+    const savedEvent = await event.save();
+
+    const users = await User.find({ status: true });
+
+    const allTokens = users.flatMap(user => user.pushTokens || []);
+
+    if (allTokens.length > 0) {
+      sendEventNotification(allTokens, savedEvent).catch(err =>
+        console.error("Push notification error:", err)
+      );
+    }
+
+    res.status(201).json({
+      message: "Event saved and notification sent",
+      event: savedEvent,
+    });
+
   } catch (err) {
+    console.error("Create event error:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // GET all events with Pagination, Search, and Filter
 exports.getEvents = async (req, res) => {
