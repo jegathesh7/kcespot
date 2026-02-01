@@ -56,10 +56,15 @@ export default function EventsTable({
       showCancelButton: true,
       confirmButtonText: `Mark as ${newStatus ? "Active" : "Closed"}`,
       confirmButtonColor: newStatus ? "#28a745" : "#6c757d",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        onStatusToggle(eventItem._id, eventItem.status);
-      }
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        try {
+          await onStatusToggle(eventItem._id, eventItem.status);
+        } catch (error) {
+          Swal.showValidationMessage(`Request failed: ${error}`);
+        }
+      },
+      allowOutsideClick: () => !Swal.isLoading(),
     });
   };
 
@@ -72,10 +77,15 @@ export default function EventsTable({
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Delete",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        onDelete(id);
-      }
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        try {
+          await onDelete(id);
+        } catch (error) {
+          Swal.showValidationMessage(`Request failed: ${error}`);
+        }
+      },
+      allowOutsideClick: () => !Swal.isLoading(),
     });
   };
 
@@ -432,7 +442,8 @@ function formatImageUrl(url) {
 
   if (!url.startsWith("http") && !url.startsWith("https")) {
     const cleanPath = url.replace(/\\/g, "/");
-    return `http://localhost:5000/${cleanPath}`;
+    // console.log(`${import.meta.env.VITE_IMAGE_BASE_URL}/${cleanPath}`);
+    return `${import.meta.env.VITE_IMAGE_BASE_URL}/${cleanPath}`;
   }
 
   return url;

@@ -67,10 +67,15 @@ export default function AchieversTable({
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Delete Item",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        onDelete(id);
-      }
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        try {
+          await onDelete(id);
+        } catch (error) {
+          Swal.showValidationMessage(`Request failed: ${error}`);
+        }
+      },
+      allowOutsideClick: () => !Swal.isLoading(),
     });
   };
 
@@ -83,10 +88,15 @@ export default function AchieversTable({
       showCancelButton: true,
       confirmButtonText: `Mark as ${newStatus ? "Active" : "Closed"}`,
       confirmButtonColor: newStatus ? "#28a745" : "#6c757d",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        onStatusToggle(item._id, item.status);
-      }
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        try {
+          await onStatusToggle(item._id, item.status);
+        } catch (error) {
+          Swal.showValidationMessage(`Request failed: ${error}`);
+        }
+      },
+      allowOutsideClick: () => !Swal.isLoading(),
     });
   };
 
@@ -464,7 +474,8 @@ function formatImageUrl(url) {
 
   if (!url.startsWith("http") && !url.startsWith("https")) {
     const cleanPath = url.replace(/\\/g, "/");
-    return `http://localhost:5000/${cleanPath}`;
+    // console.log(`${import.meta.env.VITE_IMAGE_BASE_URL}/${cleanPath}`);
+    return `${import.meta.env.VITE_IMAGE_BASE_URL}/${cleanPath}`;
   }
 
   return url;

@@ -6,6 +6,7 @@ const AchieversForm = forwardRef(
     const isEditMode = !!initialData;
     const [entryType, setEntryType] = useState("image"); // image | manual
     const [studentCount, setStudentCount] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [form, setForm] = useState({
       name: "",
@@ -30,31 +31,44 @@ const AchieversForm = forwardRef(
     const [errors, setErrors] = useState({});
 
     useImperativeHandle(ref, () => ({
-      submitForm: () => {
+      submitForm: async () => {
         if (validate()) {
-          const formData = new FormData();
-          Object.keys(form).forEach((key) => {
-            if (key === "students") {
-              formData.append("students", JSON.stringify(form.students));
-            } else if (key === "posterImage") {
-              if (form[key] instanceof File) {
-                formData.append("posterImage", form[key]);
-              }
-            } else if (key === "category") {
-              // If category is 'Others', separate logic might apply, but generally we want the custom value
-              if (form.category === "Others") {
-                formData.append("category", form.otherCategory);
+          setIsSubmitting(true);
+          try {
+            const formData = new FormData();
+            Object.keys(form).forEach((key) => {
+              if (key === "students") {
+                formData.append("students", JSON.stringify(form.students));
+                // Append student images
+                form.students.forEach((student, index) => {
+                  if (student.imageFile) {
+                    formData.append(`studentImage_${index}`, student.imageFile);
+                  }
+                });
+              } else if (key === "posterImage") {
+                if (form[key] instanceof File) {
+                  formData.append("posterImage", form[key]);
+                }
+              } else if (key === "category") {
+                if (form.category === "Others") {
+                  formData.append("category", form.otherCategory);
+                } else {
+                  formData.append("category", form.category);
+                }
+              } else if (key === "otherCategory") {
+                // Skip
               } else {
-                formData.append("category", form.category);
+                formData.append(key, form[key]);
               }
-            } else if (key === "otherCategory") {
-              // Skip appending this as a separate field, integrated into 'category' above
-            } else {
-              formData.append(key, form[key]);
-            }
-          });
-          onSave(formData);
-          return true;
+            });
+            await onSave(formData);
+            return true;
+          } catch (error) {
+            console.error("External submit failed", error);
+            return false;
+          } finally {
+            setIsSubmitting(false);
+          }
         }
         return false;
       },
@@ -184,20 +198,22 @@ const AchieversForm = forwardRef(
         } else {
           // Validate students
           let hasStudentIssues = false;
-          // We'll use a specific object to track row-level errors if needed,
-          // but for now relying on checking values + a global 'submit attempted' flag or similar is common.
-          // However, to be precise as requested, let's verify each student.
 
           const invalidStudents = form.students.some((s) => {
-            const nameInvalid = !s.name.trim();
-            const yearInvalid = !s.year.trim();
-            const deptInvalid = !s.dept.trim();
+            const name = s.name || "";
+            const year = s.year || "";
+            const dept = s.dept || "";
+
+            const nameInvalid = !name.trim();
+            const yearInvalid = !year.trim();
+            const deptInvalid = !dept.trim();
 
             return nameInvalid || yearInvalid || deptInvalid;
           });
 
           if (invalidStudents) {
-            newErrors.evidence = "Please fill all required fields correctly";
+            newErrors.evidence =
+              "Please fill all required student fields (Name, Year, Dept)";
             newErrors.studentErrors = true; // Flag to trigger row-level visual feedback
           }
         }
@@ -207,39 +223,46 @@ const AchieversForm = forwardRef(
       return Object.keys(newErrors).length === 0;
     };
 
-    const submit = (e) => {
+    const submit = async (e) => {
       e.preventDefault();
       if (validate()) {
-        const formData = new FormData();
-        Object.keys(form).forEach((key) => {
-          if (key === "students") {
-            // Stringify students array, but first we can optionally clean it or just rely on backend to update urls
-            // We pass the full array. Backend will update imageUrl for those with matching files.
-            formData.append("students", JSON.stringify(form.students));
+        setIsSubmitting(true);
+        try {
+          const formData = new FormData();
+          Object.keys(form).forEach((key) => {
+            if (key === "students") {
+              // Stringify students array, but first we can optionally clean it or just rely on backend to update urls
+              // We pass the full array. Backend will update imageUrl for those with matching files.
+              formData.append("students", JSON.stringify(form.students));
 
-            // Append student images
-            form.students.forEach((student, index) => {
-              if (student.imageFile) {
-                formData.append(`studentImage_${index}`, student.imageFile);
+              // Append student images
+              form.students.forEach((student, index) => {
+                if (student.imageFile) {
+                  formData.append(`studentImage_${index}`, student.imageFile);
+                }
+              });
+            } else if (key === "posterImage") {
+              if (form[key] instanceof File) {
+                formData.append("posterImage", form[key]);
               }
-            });
-          } else if (key === "posterImage") {
-            if (form[key] instanceof File) {
-              formData.append("posterImage", form[key]);
-            }
-          } else if (key === "category") {
-            if (form.category === "Others") {
-              formData.append("category", form.otherCategory);
+            } else if (key === "category") {
+              if (form.category === "Others") {
+                formData.append("category", form.otherCategory);
+              } else {
+                formData.append("category", form.category);
+              }
+            } else if (key === "otherCategory") {
+              // Skip
             } else {
-              formData.append("category", form.category);
+              formData.append(key, form[key]);
             }
-          } else if (key === "otherCategory") {
-            // Skip
-          } else {
-            formData.append(key, form[key]);
-          }
-        });
-        onSave(formData);
+          });
+          await onSave(formData);
+        } catch (error) {
+          console.error("Error submitting form:", error);
+        } finally {
+          setIsSubmitting(false);
+        }
       }
     };
 
@@ -507,7 +530,7 @@ const AchieversForm = forwardRef(
                             typeof form.posterImage === "string"
                               ? form.posterImage.startsWith("http")
                                 ? form.posterImage
-                                : `http://localhost:5000/${form.posterImage.replace(/\\/g, "/")}`
+                                : `${import.meta.env.VITE_IMAGE_BASE_URL}/${form.posterImage.replace(/\\/g, "/")}`
                               : URL.createObjectURL(form.posterImage)
                           }
                           alt="Preview"
@@ -599,7 +622,7 @@ const AchieversForm = forwardRef(
                                       }
                                       isInvalid={
                                         errors.studentErrors &&
-                                        !student.name.trim()
+                                        !(student.name || "").trim()
                                       }
                                     />
                                   </td>
@@ -617,7 +640,7 @@ const AchieversForm = forwardRef(
                                       }
                                       isInvalid={
                                         errors.studentErrors &&
-                                        !student.year.trim()
+                                        !(student.year || "").trim()
                                       }
                                     />
                                   </td>
@@ -635,7 +658,7 @@ const AchieversForm = forwardRef(
                                       }
                                       isInvalid={
                                         errors.studentErrors &&
-                                        !student.dept.trim()
+                                        !(student.dept || "").trim()
                                       }
                                     />
                                   </td>
@@ -649,7 +672,7 @@ const AchieversForm = forwardRef(
                                             ) ||
                                             student.imageUrl.startsWith("http")
                                               ? student.imageUrl
-                                              : `http://localhost:5000/${student.imageUrl.replace(/\\/g, "/")}`
+                                              : `${import.meta.env.VITE_IMAGE_BASE_URL}/${student.imageUrl.replace(/\\/g, "/")}`
                                           }
                                           alt="Preview"
                                           className="rounded-circle object-fit-cover"
@@ -700,8 +723,22 @@ const AchieversForm = forwardRef(
                 variant="primary"
                 type="submit"
                 className="px-4 fw-medium"
+                disabled={isSubmitting}
               >
-                {isEditMode ? "Save Changes" : "Create Record"}
+                {isSubmitting ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    Saving...
+                  </>
+                ) : isEditMode ? (
+                  "Save Changes"
+                ) : (
+                  "Create Record"
+                )}
               </Button>
             </div>
           </Form>
