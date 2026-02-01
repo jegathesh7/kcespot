@@ -23,13 +23,13 @@ export default function UsersTable({
   const getBadgeClassOfCollege = (college) => {
     switch (college) {
       case "KCE":
-        return "badge-kce";
+        return "badge-college-kce";
       case "KIT":
-        return "badge-kit";
+        return "badge-college-kit";
       case "KAHE":
-        return "badge-kahe";
+        return "badge-college-kahe";
       default:
-        return "badge-default";
+        return "badge-category";
     }
   };
 

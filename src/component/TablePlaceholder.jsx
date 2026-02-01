@@ -13,27 +13,27 @@ const TablePlaceholder = () => {
                 Title
               </th>
               <th className="py-3 text-secondary small text-uppercase fw-bold">
-                Location
+                Title
               </th>
               <th className="py-3 text-secondary small text-uppercase fw-bold">
-                Classification
+                Title
               </th>
               <th className="py-3 text-secondary small text-uppercase fw-bold">
-                Poster
+                Title
               </th>
               <th className="py-3 text-secondary small text-uppercase fw-bold">
-                Visibility
+                Title
               </th>
               <th className="py-3 text-secondary small text-uppercase fw-bold text-center">
-                Status
+                Title
               </th>
               <th className="py-3 pe-4 text-end text-secondary small text-uppercase fw-bold">
-                Action
+                Title
               </th>
             </tr>
           </thead>
           <tbody>
-            {[...Array(5)].map((_, i) => (
+            {[...Array(8)].map((_, i) => (
               <tr key={i}>
                 <td className="ps-4">
                   <Placeholder as="div" animation="glow">
