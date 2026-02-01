@@ -239,53 +239,65 @@ export default function AchieversTable({
                         </span>
                       </td>
                       <td>
-                        <div className="d-flex align-items-center gap-3">
+                        <div className="d-flex align-items-center gap-2">
                           {/* Like */}
                           <div
-                            className="d-flex align-items-center gap-1 text-muted small"
+                            className="d-flex align-items-center  text-muted small"
                             title="Likes"
                           >
                             <ThumbUpIcon
                               style={{ fontSize: "16px", color: "#64748b" }}
                             />
                             <span className="fw-semibold">
-                              {a.reactions?.like || 0}
+                              {a.reactions?.r1 || 0}
                             </span>
                           </div>
                           {/* Heart */}
                           <div
-                            className="d-flex align-items-center gap-1 text-muted small"
+                            className="d-flex align-items-center  text-muted small"
                             title="Hearts"
                           >
                             <FavoriteIcon
                               style={{ fontSize: "16px", color: "#ef4444" }}
                             />
                             <span className="fw-semibold">
-                              {a.reactions?.heart || 0}
+                              {a.reactions?.r2 || 0}
                             </span>
                           </div>
                           {/* Clap */}
                           <div
-                            className="d-flex align-items-center gap-1 text-muted small"
+                            className="d-flex align-items-center  text-muted small"
                             title="Claps"
                           >
                             <CelebrationIcon
                               style={{ fontSize: "16px", color: "#eab308" }}
                             />
                             <span className="fw-semibold">
-                              {a.reactions?.clap || 0}
+                              {a.reactions?.r3 || 0}
                             </span>
                           </div>
                           {/* Fire */}
                           <div
-                            className="d-flex align-items-center gap-1 text-muted small"
+                            className="d-flex align-items-center  text-muted small"
                             title="Fire"
                           >
                             <LocalFireDepartmentIcon
                               style={{ fontSize: "16px", color: "#f97316" }}
                             />
                             <span className="fw-semibold">
-                              {a.reactions?.fire || 0}
+                              {a.reactions?.r4 || 0}
+                            </span>
+                          </div>
+
+                          <div
+                            className="d-flex align-items-center  text-muted small"
+                            title="Fire"
+                          >
+                            <LocalFireDepartmentIcon
+                              style={{ fontSize: "16px", color: "#f97316" }}
+                            />
+                            <span className="fw-semibold">
+                              {a.reactions?.r5 || 0}
                             </span>
                           </div>
                         </div>
