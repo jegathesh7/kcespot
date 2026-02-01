@@ -6,7 +6,7 @@ const {
   updateEvent,
   deleteEvent,
 } = require("../controllers/eventController");
-
+const User = require("../models/User");
 const upload = require("../middleware/upload");
 const { adminOnly, protect } = require("../middleware/authMiddleware");
 
