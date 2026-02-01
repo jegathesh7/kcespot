@@ -7,7 +7,10 @@ import {
   Modal,
   Form,
   Pagination,
+  Row,
+  Col,
 } from "react-bootstrap";
+import GroupsIcon from "@mui/icons-material/Groups";
 import VisibilityIcon from "@mui/icons-material/VisibilityOutlined";
 import FileDownloadIcon from "@mui/icons-material/FileDownloadOutlined";
 import EditIcon from "@mui/icons-material/EditOutlined";
@@ -21,7 +24,9 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import CelebrationIcon from "@mui/icons-material/Celebration";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import Swal from "sweetalert2";
-
+import Logo from "../../assets/logo.png";
+import KCELogo from "../../assets/KCE_LOGO.webp";
+import KITLogo from "../../assets/KIT-LOGO.png";
 import TablePlaceholder from "../../component/TablePlaceholder";
 export default function AchieversTable({
   data,
@@ -56,6 +61,25 @@ export default function AchieversTable({
     setShowModal(false);
     setSelectedImage("");
     setSelectedTitle("");
+  };
+
+  // Student Modal State
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [studentData, setStudentData] = useState([]);
+  const [selectedCollege, setSelectedCollege] = useState("");
+
+  const handleViewStudents = (title, students, college) => {
+    setSelectedTitle(title);
+    setStudentData(students || []);
+    setSelectedCollege(college);
+    setShowStudentModal(true);
+  };
+
+  const handleCloseStudentModal = () => {
+    setShowStudentModal(false);
+    setStudentData([]);
+    // Do not clear selectedTitle immediately if you want it to persist during fade out,
+    // but here we can clear it or leave it.
   };
 
   const handleDeleteClick = (id, name) => {
@@ -303,7 +327,23 @@ export default function AchieversTable({
                         </div>
                       </td>
                       <td className="text-center">
-                        {a.posterImage ? (
+                        {a.students && a.students.length > 0 ? (
+                          <Tooltip title="View Students">
+                            <Button
+                              variant="light"
+                              className="action-btn mx-auto text-primary"
+                              onClick={() =>
+                                handleViewStudents(
+                                  a.name,
+                                  a.students,
+                                  a.college,
+                                )
+                              }
+                            >
+                              <GroupsIcon fontSize="small" />
+                            </Button>
+                          </Tooltip>
+                        ) : a.posterImage && a.posterImage !== "null" ? (
                           <Tooltip title="View Evidence">
                             <Button
                               variant="light"
@@ -447,29 +487,168 @@ export default function AchieversTable({
           </div>
         </div>
       )}
+
+      {/* Student List Modal */}
+      {/* Student List Modal */}
+      <Modal
+        show={showStudentModal}
+        onHide={handleCloseStudentModal}
+        centered
+        size="lg" // Can make this 'xl' if needed for 3 columns
+        className="student-modal"
+        contentClassName="border-0 shadow-lg"
+        style={{ backdropFilter: "blur(5px)" }}
+      >
+        <div className="modal-header border-0 pb-0 pt-4 px-4 d-flex flex-column align-items-center justify-content-center position-relative">
+          {/* Logo Section */}
+          <div className="mb-3 text-center">
+            <img
+              src={
+                selectedCollege === "KCE"
+                  ? KCELogo
+                  : selectedCollege === "KIT"
+                    ? KITLogo 
+                    : Logo
+              }
+              alt="Karpagam Institutions"
+              style={{ height: "100px", objectFit: "contain" }}
+            />
+          </div>
+
+          <button
+            type="button"
+            className="btn-close position-absolute top-0 end-0 m-3"
+            onClick={handleCloseStudentModal}
+            aria-label="Close"
+          ></button>
+        </div>
+
+        <Modal.Body className="p-4 pt-1">
+          {/* Badge Section */}
+          <div className="text-center mb-5">
+            <div
+              className="d-inline-block px-4 py-2 rounded-pill fw-bold text-uppercase shadow-sm"
+              style={{
+                letterSpacing: "1px",
+                fontSize: "0.85rem",
+                backgroundColor: "#fffbeb", 
+                color: "#92400e", 
+                border: "1px solid #fcd34d", 
+              }}
+            >
+              🏆 Student Achievements
+            </div>
+          </div>
+
+          <Row className="g-3 justify-content-center">
+            {studentData.map((student, index) => {
+              const avatarColor = getAvatarColor(student.name);
+              
+              const total = studentData.length;
+              let colSize = 6; 
+              if (total === 1)
+                colSize = 8; 
+              else if (total > 6) colSize = 4; 
+
+              return (
+                <Col md={colSize} key={student._id || index}>
+                  <div
+                    className="bg-white p-3 shadow-sm d-flex align-items-center position-relative h-100 border"
+                    style={{
+                      borderRadius: "24px",
+                      borderColor: "rgba(0,0,0,0.05)",
+                      transition: "transform 0.2s ease",
+                    }}
+                  >
+
+                    <div
+                      className="position-absolute bg-white shadow-sm rounded-circle d-flex align-items-center justify-content-center border"
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        fontSize: "12px",
+                        fontWeight: "800",
+                        color: "#64748b",
+                        bottom: "8px",
+                        left: "52px",
+                        zIndex: 2,
+                      }}
+                    >
+                      {index + 1}
+                    </div>
+
+                    <div className="flex-shrink-0 me-3">
+                      {student.imageUrl ? (
+                        <img
+                          src={formatImageUrl(student.imageUrl)}
+                          alt={student.name}
+                          className="rounded-circle object-fit-cover shadow-sm border"
+                          style={{ width: "60px", height: "60px" }}
+                        />
+                      ) : (
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm"
+                          style={{
+                            width: "60px",
+                            height: "60px",
+                            fontSize: "1.5rem",
+                            backgroundColor: avatarColor.bg,
+                            color: avatarColor.text,
+                          }}
+                        >
+                          {student.name ? student.name.charAt(0) : "S"}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-grow-1 overflow-hidden">
+                      <h6 className="mb-1 fw-bold text-dark text-truncate fs-6">
+                        {student.name}
+                      </h6>
+                      <div className="d-flex align-items-center">
+                        <span
+                          className="fw-bold text-primary text-uppercase"
+                          style={{
+                            fontSize: "0.8rem",
+                            letterSpacing: "0.5px",
+                            color: "#4f46e5",
+                          }}
+                        >
+                          {student.year}{" "}
+                          <span className="mx-1 text-secondary opacity-50">
+                            |
+                          </span>{" "}
+                          {student.dept}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+              );
+            })}
+          </Row>
+        </Modal.Body>
+      </Modal>
     </>
   );
 }
 
-// Helper to get color for avatar background
 function getColorForCollege(college) {
   if (!college) return "#bdbdbd";
   switch (college.toUpperCase()) {
     case "KCE":
-      return "#1976d2"; // Blue
+      return "#1976d2"; 
     case "KIT":
-      return "#ed6c02"; // Orange
+      return "#ed6c02"; 
     case "KAHE":
-      return "#2e7d32"; // Green
+      return "#2e7d32"; 
     default:
       return "#9c27b0";
   }
 }
 
-// Helper for badge class
 function getBadgeClassOfCollege(college) {
-  if (!college) return "bg-light text-dark"; // fallback
-  // Matches the CSS class names defined in achievers.css
+  if (!college) return "bg-light text-dark"; 
   switch (college.toUpperCase()) {
     case "KCE":
       return "badge-college-kce";
@@ -480,6 +659,40 @@ function getBadgeClassOfCollege(college) {
     default:
       return "badge-category";
   }
+}
+
+function getAvatarColor(name) {
+  if (!name) return { bg: "#e2e8f0", text: "#64748b" };
+
+  const bgColors = [
+    "#fee2e2", 
+    "#ffedd5", 
+    "#fef3c7", 
+    "#dcfce7", 
+    "#dbeafe", 
+    "#e0e7ff", 
+    "#fae8ff", 
+    "#fce7f3", 
+  ];
+
+  const textColors = [
+    "#ef4444", 
+    "#f97316", 
+    "#f59e0b", 
+    "#22c55e", 
+    "#3b82f6", 
+    "#6366f1", 
+    "#d946ef", 
+    "#ec4899", 
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const index = Math.abs(hash) % bgColors.length;
+  return { bg: bgColors[index], text: textColors[index] };
 }
 function formatImageUrl(url) {
   if (!url) return "";
