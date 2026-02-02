@@ -1,5 +1,9 @@
 const Achiever = require("../models/Achiever");
 const Reaction = require("../models/Reaction");
+const User = require("../models/User");
+const {
+  sendAchieverNotification,
+} = require("../service/pushNotificationService");
 
 // CREATE
 exports.createAchiever = async (req, res) => {
@@ -27,8 +31,27 @@ exports.createAchiever = async (req, res) => {
     }
 
     const achiever = new Achiever(entryData);
-    await achiever.save();
-    res.status(201).json({ message: "Achiever saved", achiever });
+    const savedAchiever = await achiever.save();
+
+    // --- Send Push Notification ---
+    const users = await User.find({ status: true });
+    const allTokens = users.flatMap((user) => user.pushTokens || []);
+
+    if (allTokens.length > 0) {
+      console.log(
+        `[Achiever Notification] Found ${users.length} users, ${allTokens.length} tokens.`,
+      );
+      sendAchieverNotification(allTokens, savedAchiever).catch((err) =>
+        console.error("Achiever push notification error:", err),
+      );
+    }
+
+    res
+      .status(201)
+      .json({
+        message: "Achiever saved and notification sent",
+        achiever: savedAchiever,
+      });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
