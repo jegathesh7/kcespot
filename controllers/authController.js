@@ -298,17 +298,24 @@ exports.login = async (req, res) => {
       { expiresIn: "1d" },
     );
 
-    // Determine if we are in a secure context (Production or HTTPS/Ngrok)
-    // Note: app.set('trust proxy', 1) in server.js allows req.secure to work with Ngrok
-    const isSecure = req.secure || process.env.NODE_ENV === "production";
+    // const isSecure = req.secure || process.env.NODE_ENV === "production";
 
-    // Set Cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: isSecure, // True for Vercel/Ngrok, False for Localhost HTTP
-      sameSite: isSecure ? "none" : "lax", // None for Cross-Site, Lax for Localhost
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+    // // Set Cookie
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: isSecure, // True for Vercel/Ngrok, False for Localhost HTTP
+    //   sameSite: isSecure ? "none" : "lax", // None for Cross-Site, Lax for Localhost
+    //   maxAge: 24 * 60 * 60 * 1000,
+    // });
+
+   res.cookie("token", token, {
+  httpOnly: true,
+  secure: process.env.COOKIE_SECURE === "true",
+  sameSite: process.env.COOKIE_SAMESITE,
+  maxAge: 24 * 60 * 60 * 1000,
+});
+
+
 
     res.json({
       status: "success",
