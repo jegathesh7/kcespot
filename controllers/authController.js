@@ -300,11 +300,11 @@ exports.login = async (req, res) => {
 
     // Set Cookie
     res.cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  maxAge: 24 * 60 * 60 * 1000,
+});
 
     res.json({
       status: "success",
@@ -316,7 +316,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
       },
-      token: token,
+      // token: token,
     });
   } catch (err) {
     res.status(500).json({
