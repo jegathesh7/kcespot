@@ -6,11 +6,16 @@ const cors = require("cors");
 const connectDB = require("./config/db.js");
 
 const app = express();
+app.set("trust proxy", 1);
 connectDB();
 
-const allowedOrigins = process.env.CLIENT_URL
-  ? process.env.CLIENT_URL.split(",").map((url) => url.trim())
-  : [];
+const allowedOrigins = [
+  "https://localhost:5173",
+  "https://kcespotlight2.vercel.app",
+  "https://kcespotlight2-git-main-poovarasans-projects-e0246408.vercel.app",
+  "https://kcespotlight2-c5g5htfg2-poovarasans-projects-e0246408.vercel.app"
+
+];
 
 app.use(
   cors({
