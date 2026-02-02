@@ -2,6 +2,7 @@
 # Environment Variables
 .env
 
+serviceAccount.json
 # Logs
 npm-debug.log*
 yarn-debug.log*
