@@ -9,6 +9,7 @@ const {
   forgotPassword,
   verifyResetOtp,
   resetPassword,
+  logout,
 } = require("../controllers/authController");
 
 // Registration Flow
@@ -18,7 +19,7 @@ router.post("/resend-registration-otp", resendRegistrationOtp);
 
 // Login
 router.post("/login", login);
-
+router.post("/logout", protect, logout);
 // Password Reset Flow
 router.post("/forgot-password", forgotPassword);
 router.post("/verify-reset-otp", verifyResetOtp);

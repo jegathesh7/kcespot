@@ -4,10 +4,7 @@ const jwt = require("jsonwebtoken");
 exports.protect = (req, res, next) => {
   let token;
 
-  // console.log("Cookies:", req.cookies); // DEBUG
-  // console.log("Headers Auth:", req.headers.authorization); // DEBUG
-
-  if (req.cookies.token) {
+  if (req.cookies?.token) {
     token = req.cookies.token;
   } else if (
     req.headers.authorization &&
@@ -19,15 +16,14 @@ exports.protect = (req, res, next) => {
   if (!token) {
     return res.status(401).json({
       status: "failed",
-      statusCode: 401,
       message: "Not authorized, please login",
     });
   }
-  const clientHeader = req.headers["x-app-client"];
+
+  const clientHeader = req.headers["X-App-Client"];
   if (clientHeader !== "kce-admin") {
     return res.status(401).json({
       status: "failed",
-      statusCode: 401,
       message: "API access restricted to application only",
     });
   }
@@ -37,21 +33,31 @@ exports.protect = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (err) {
-    res.status(401).json({ message: "Invalid token" });
+    return res.status(401).json({
+      status: "failed",
+      message: "Invalid token",
+    });
   }
 };
 
-// 🔐 ADMIN ONLY
+// ADMIN ONLY
 exports.adminOnly = (req, res, next) => {
   if (req.user.role !== "admin") {
-    return res.status(403).json({ message: "Admin access only" });
+    return res.status(403).json({
+      status: "failed",
+      message: "Admin access only",
+    });
   }
   next();
 };
 
+// USER ONLY
 exports.userOnly = (req, res, next) => {
   if (req.user.role !== "user") {
-    return res.status(403).json({ message: "User access only" });
+    return res.status(403).json({
+      status: "failed",
+      message: "User access only",
+    });
   }
   next();
 };

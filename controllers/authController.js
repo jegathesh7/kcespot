@@ -455,3 +455,17 @@ exports.resetPassword = async (req, res) => {
     });
   }
 };
+
+// LOGOUT
+exports.logout = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.COOKIE_SECURE === "true",
+    sameSite: process.env.COOKIE_SAMESITE,
+  });
+
+  return res.status(200).json({
+    status: "success",
+    message: "Logged out successfully",
+  });
+};
