@@ -15,11 +15,23 @@ exports.createEvent = async (req, res) => {
 
     const users = await User.find({ status: true });
 
-    const allTokens = users.flatMap(user => user.pushTokens || []);
+    const allTokens = users.flatMap((user) => user.pushTokens || []);
+
+    console.log(`[Notification Debug] Found ${users.length} active users.`);
+    console.log(
+      `[Notification Debug] Extracted ${allTokens.length} push tokens.`,
+    );
 
     if (allTokens.length > 0) {
-      sendEventNotification(allTokens, savedEvent).catch(err =>
-        console.error("Push notification error:", err)
+      console.log(
+        `[Notification Debug] Sending notifications to tokens:`,
+        allTokens,
+      );
+      // Added 'await' to catch errors in the frontend response
+      await sendEventNotification(allTokens, savedEvent);
+    } else {
+      console.log(
+        "[Notification Debug] No tokens found, skipping notification sending.",
       );
     }
 
@@ -27,13 +39,11 @@ exports.createEvent = async (req, res) => {
       message: "Event saved and notification sent",
       event: savedEvent,
     });
-
   } catch (err) {
     console.error("Create event error:", err);
     res.status(500).json({ error: err.message });
   }
 };
-
 
 // GET all events with Pagination, Search, and Filter
 exports.getEvents = async (req, res) => {
@@ -80,11 +90,9 @@ exports.updateEvent = async (req, res) => {
       updateData.eventImage = req.file.path;
     }
 
-    const updated = await Event.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
+    const updated = await Event.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     res.json(updated);
   } catch (err) {
