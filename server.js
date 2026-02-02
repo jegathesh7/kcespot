@@ -1,11 +1,7 @@
 const path = require("path");
 const dotenv = require("dotenv");
-dotenv.config({
-  path:
-    process.env.NODE_ENV === "production"
-      ? path.join(__dirname, ".env.production")
-      : path.join(__dirname, ".env.development"),
-});const express = require("express");
+dotenv.config({ path: path.join(__dirname, ".env") });
+const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db.js");
 
