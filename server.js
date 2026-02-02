@@ -1,5 +1,6 @@
+const path = require("path");
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db.js");
@@ -13,7 +14,14 @@ const allowedOrigins = process.env.CLIENT_URL
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.error("Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
@@ -32,4 +40,7 @@ app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/unstop", require("./routes/proxyRoutes"));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
+  console.log("Allowed Origins:", allowedOrigins);
+});
