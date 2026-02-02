@@ -11,7 +11,7 @@ const {
   resetPassword,
   logout,
 } = require("../controllers/authController");
-
+const { protect } = require("../middleware/authMiddleware");
 // Registration Flow
 router.post("/register", register);
 router.post("/verify-registration-otp", verifyRegistrationOtp);
