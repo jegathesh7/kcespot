@@ -39,7 +39,7 @@ const allowedOrigins = [
 // app.use(cors(corsOptions));
 // app.options(/.*/, cors(corsOptions));
 
-app.use(cors(allowedOrigins="*"));
+app.use(cors({ origin: "*" }));
 
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
