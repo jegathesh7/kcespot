@@ -4,7 +4,7 @@ import { Navbar, Container, Nav, Image, Dropdown } from "react-bootstrap";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import logo from "../assets/logo.png";
-import "../styles/Header.css";
+import "../styles/header.css";
 
 function Header() {
   const navigate = useNavigate();
