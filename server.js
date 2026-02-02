@@ -10,26 +10,34 @@ app.set("trust proxy", 1);
 connectDB();
 
 const allowedOrigins = [
+  "http://localhost:5173",
   "https://localhost:5173",
+
   "https://kcespotlight2.vercel.app",
   "https://kcespotlight2-git-main-poovarasans-projects-e0246408.vercel.app",
   "https://kcespotlight2-c5g5htfg2-poovarasans-projects-e0246408.vercel.app"
-
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.error("Blocked by CORS:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  }),
-);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    console.log("Incoming origin:", origin);
+
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+app.options("*", cors());
+
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
 app.use(require("cookie-parser")());
