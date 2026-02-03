@@ -6,9 +6,16 @@ const {
   createUser,
   updateUser,
   deleteUser,
+  getUser,
 } = require("../controllers/userController");
 const { savePushToken } = require("../controllers/notificationController");
 const { protect, adminOnly } = require("../middleware/authMiddleware");
+
+
+//common for all users
+router.get("/get-me", protect, getUser);
+
+
 
 // 🔐 ADMIN ACCESS ONLY
 router.get("/", protect, adminOnly, getUsers);
