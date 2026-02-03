@@ -13,7 +13,7 @@ const { protect, adminOnly } = require("../middleware/authMiddleware");
 
 
 //common for all users
-router.get("/get-me", protect, getUser);
+router.post("/get-me", protect, getUser);
 
 
 
