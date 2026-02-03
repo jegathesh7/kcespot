@@ -308,14 +308,12 @@ exports.login = async (req, res) => {
     //   maxAge: 24 * 60 * 60 * 1000,
     // });
 
-   res.cookie("token", token, {
-  httpOnly: true,
-  secure: process.env.COOKIE_SECURE === "true",
-  sameSite: process.env.COOKIE_SAMESITE,
-  maxAge: 24 * 60 * 60 * 1000,
-});
-
-
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: process.env.COOKIE_SAMESITE,
+      maxAge: 24 * 60 * 60 * 1000,
+    });
 
     res.json({
       status: "success",
@@ -452,6 +450,80 @@ exports.resetPassword = async (req, res) => {
       status: "failed",
       statusCode: 500,
       message: err.message,
+    });
+  }
+};
+
+// CHANGE PASSWORD (Authenticated)
+exports.changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id; // From protect middleware
+
+    // 1. Check for missing fields
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "Old password and new password are required",
+      });
+    }
+
+    // 2. Validate New Password Strength
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "New password must be at least 6 characters long",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        status: "failed",
+        statusCode: 404,
+        message: "User not found",
+      });
+    }
+
+    // 3. Verify Old Password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        status: "failed",
+        statusCode: 401,
+        message: "Incorrect old password",
+      });
+    }
+
+    // 4. Check if new password is the same as old password
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({
+        status: "failed",
+        statusCode: 400,
+        message: "New password cannot be the same as the old password",
+      });
+    }
+
+    // 5. Hash and Update Password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "Password changed successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "failed",
+      statusCode: 500,
+      message: "Internal Server Error",
+      error: err.message,
     });
   }
 };

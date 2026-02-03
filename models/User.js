@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema(
     collegeName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-
+    rollNo: { type: String, required: true },
+    batch:{type:String,required:true},
     // 🔑 ROLE
     role: {
       type: String,
