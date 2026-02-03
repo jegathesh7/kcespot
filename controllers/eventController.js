@@ -1,10 +1,11 @@
-const eventEmailTemplate  = require('./../templates/eventInfoTemplate.js')
+const eventEmailTemplate = require("./../templates/eventInfoTemplate.js");
 const Event = require("../models/Event.js");
 const User = require("../models/User.js");
 const { sendEventNotification } = require("../service/pushNotificationService");
-const nodemailer = require("nodemailer")
-const mongoose = require('mongoose')
+const nodemailer = require("nodemailer");
+const mongoose = require("mongoose");
 const path = require("path");
+const highUsersList = require("./../legit/users.js");
 
 // CREATE event
 exports.createEvent = async (req, res) => {
@@ -117,18 +118,17 @@ exports.deleteEvent = async (req, res) => {
   }
 };
 
-
 // send notification to high authorities about the event updates
-
 exports.sendEventInfo = async (req, res) => {
   try {
     const { id, userId } = req.body;
 
     if (!id || !userId) {
-      return res.status(400).json({ message: "Event ID and User ID are required" });
+      return res
+        .status(400)
+        .json({ message: "Event ID and User ID are required" });
     }
 
-    // Validate ObjectIds
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid Event ID" });
     }
@@ -151,42 +151,39 @@ exports.sendEventInfo = async (req, res) => {
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
+        pass: process.env.EMAIL_PASS,
+      },
     });
 
-    // Resolve image path safely
     let imagePath = null;
     if (requestEvent.eventImage) {
       imagePath = path.join(
         __dirname,
         "..",
-        requestEvent.eventImage.replace(/\\/g, "/")
+        requestEvent.eventImage.replace(/\\/g, "/"),
       );
     }
 
     const mailOptions = {
       from: `"${fromInfo.name}" <${process.env.EMAIL_USER}>`,
-      to: "siranjeevi0619@gmail.com",
-      subject: `Event Notification: ${requestEvent.title}`,
-      html: eventEmailTemplate(requestEvent, fromInfo)
+      to: highUsersList,
+      subject: `Event Notification from KI: ${requestEvent.title}`,
+      html: eventEmailTemplate(requestEvent, fromInfo),
     };
 
-    // Attach image ONLY if it exists
     if (imagePath) {
       mailOptions.attachments = [
         {
           filename: "event-poster.jpg",
           path: imagePath,
-          cid: "eventimage"
-        }
+          cid: "eventimage",
+        },
       ];
     }
 
     await transporter.sendMail(mailOptions);
 
     return res.json({ message: "Event information sent successfully" });
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });
