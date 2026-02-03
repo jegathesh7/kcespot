@@ -58,3 +58,7 @@ app.listen(PORT, () => {
   console.log(`Server running on ${PORT}`);
   console.log("Allowed Origins:", allowedOrigins);
 });
+
+app.use("/api/check-aws", (req, res) => {
+  return res.json({ message: "hello hero" });
+});
