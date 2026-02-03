@@ -259,7 +259,7 @@ exports.login = async (req, res) => {
         message: "Email and password are required",
       });
     }
-     
+
     const normalizedEmail = email.toLowerCase();
     const user = await User.findOne({ email: normalizedEmail });
 
@@ -299,15 +299,15 @@ exports.login = async (req, res) => {
       { expiresIn: "1d" },
     );
 
-    // const isSecure = req.secure || process.env.NODE_ENV === "production";
+    // Save Push Token if provided during login
+    const { pushToken, fcmToken } = req.body;
+    const tokenToSave = pushToken || fcmToken;
 
-    // // Set Cookie
-    // res.cookie("token", token, {
-    //   httpOnly: true,
-    //   secure: isSecure, // True for Vercel/Ngrok, False for Localhost HTTP
-    //   sameSite: isSecure ? "none" : "lax", // None for Cross-Site, Lax for Localhost
-    //   maxAge: 24 * 60 * 60 * 1000,
-    // });
+    if (tokenToSave && !user.pushTokens.includes(tokenToSave)) {
+      user.pushTokens.push(tokenToSave);
+      await user.save();
+      console.log(`[Login] Saved new push token for user ${user.email}`);
+    }
 
     res.cookie("token", token, {
       httpOnly: true,
