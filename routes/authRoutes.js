@@ -27,6 +27,6 @@ router.post("/verify-reset-otp", verifyResetOtp);
 router.post("/reset-password", resetPassword);
 
 // Change Password (Authenticated)
-router.post("/change-password", protect, changePassword);
+router.patch("/change-password", protect, changePassword);
 
 module.exports = router;
