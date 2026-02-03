@@ -1,6 +1,8 @@
+const eventEmailTemplate  = require('./../templates/eventInfoTemplate.js')
 const Event = require("../models/Event.js");
 const User = require("../models/User.js");
 const { sendEventNotification } = require("../service/pushNotificationService");
+const nodemailer = require("nodemailer")
 // CREATE event
 exports.createEvent = async (req, res) => {
   try {
@@ -109,5 +111,46 @@ exports.deleteEvent = async (req, res) => {
     res.json({ message: "Event deleted successfully (Soft)" });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+
+// send notification to high authorities about the event updates
+
+exports.sendEventInfo = async (req, res) => {
+  try {
+    const { id, userId } = req.body;
+
+    const requestEvent = await Event.findById(id);
+    if (!requestEvent) {
+      return res.json({ message: "Event Not Found" });
+    }
+
+    const fromInfo = await User.findById(userId);
+    if (!fromInfo) {
+      return res.json({ message: "Admin not found" });
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    const mailOptions = {
+      from: `"${fromInfo.name}" <${process.env.EMAIL_USER}>`,
+      to: "siranjeevi0619@gmail.com",
+      subject: `Event Notification: ${requestEvent.title}`,
+      html: eventEmailTemplate(requestEvent, fromInfo)
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    return res.json({ message: "Event information sent successfully" });
+
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 };

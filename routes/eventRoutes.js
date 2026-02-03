@@ -5,11 +5,15 @@ const {
   getEvents,
   updateEvent,
   deleteEvent,
+  sendEventInfo,
 } = require("../controllers/eventController");
 const User = require("../models/User");
 const { sendEventNotification } = require("../service/pushNotificationService");
 const upload = require("../middleware/upload");
 const { adminOnly, protect } = require("../middleware/authMiddleware");
+
+router.post("/post-event", protect, adminOnly, sendEventInfo)
+
 
 router.post("/", protect, adminOnly, upload.single("eventImage"), createEvent);
 router.get("/", protect, getEvents);

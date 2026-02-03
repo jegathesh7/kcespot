@@ -1,4 +1,4 @@
-const eventEmailTemplate = (event, fromUser) => `
+module.exports = (event, fromUser) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -14,18 +14,18 @@ const eventEmailTemplate = (event, fromUser) => `
 
     <hr />
 
-    <p><strong>📅 Date:</strong> ${new Date(event.eventDate).toDateString()}</p>
-    <p><strong>📍 Campus:</strong> ${event.campus}</p>
-    <p><strong>🏛 Venue:</strong> ${event.venue}</p>
-    <p><strong>💻 Mode:</strong> ${event.mode}</p>
-    <p><strong>🏷 Type:</strong> ${event.type}</p>
-    <p><strong>🎯 Target Audience:</strong> ${event.targetAudience}</p>
-    <p><strong>🧑‍💼 Organizer:</strong> ${event.organizer}</p>
+    <p><strong>Date:</strong> ${new Date(event.eventDate).toDateString()}</p>
+    <p><strong>Campus:</strong> ${event.campus}</p>
+    <p><strong>Venue:</strong> ${event.venue}</p>
+    <p><strong>Mode:</strong> ${event.mode}</p>
+    <p><strong>Type:</strong> ${event.type}</p>
+    <p><strong>Target Audience:</strong> ${event.targetAudience}</p>
+    <p><strong>Organizer:</strong> ${event.organizer}</p>
 
     <hr />
 
     <p>
-      <strong>🔗 Event Link:</strong><br/>
+      <strong>Event Link:</strong><br/>
       <a href="${event.eventUrl}" target="_blank">${event.eventUrl}</a>
     </p>
 
