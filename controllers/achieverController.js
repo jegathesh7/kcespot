@@ -6,56 +6,66 @@ const {
 } = require("../service/pushNotificationService");
 
 // CREATE
+
 exports.createAchiever = async (req, res) => {
   try {
     const entryData = { ...req.body };
 
-    // Parse students if it's a string (from FormData)
     if (typeof entryData.students === "string") {
       entryData.students = JSON.parse(entryData.students);
     }
 
-    // Handle File Uploads (Poster + Student Images)
-    if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        if (file.fieldname === "posterImage") {
-          entryData.posterImage = file.path;
-        } else if (file.fieldname.startsWith("studentImage_")) {
-          // Extract index from fieldname "studentImage_0", "studentImage_1", etc.
-          const index = parseInt(file.fieldname.split("_")[1]);
-          if (entryData.students && entryData.students[index]) {
-            entryData.students[index].imageUrl = file.path;
+    entryData.students = entryData.students || [];
+
+    const normalizePath = (p) => p.replace(/\\/g, "/");
+
+    if (Array.isArray(req.files)) {
+      for (const file of req.files) {
+        const { fieldname, path, filename } = file;
+
+        if (fieldname === "posterImage") {
+          entryData.posterImage = `/uploads/${filename}`;
+        }
+
+        if (fieldname.startsWith("studentImage_")) {
+          const index = Number(fieldname.split("_")[1]);
+
+          if (entryData.students[index]) {
+            entryData.students[index].imageUrl = `/uploads/${filename}`;
           }
         }
-      });
+      }
     }
 
-    const achiever = new Achiever(entryData);
-    const savedAchiever = await achiever.save();
+    const achiever = await Achiever.create(entryData);
 
-    // --- Send Push Notification ---
-    const users = await User.find({ status: true });
-    const allTokens = users.flatMap((user) => user.pushTokens || []);
+    const users = await User.find(
+      { status: true },
+      { pushTokens: 1 }
+    );
 
-    if (allTokens.length > 0) {
-      console.log(
-        `[Achiever Notification] Found ${users.length} users, ${allTokens.length} tokens.`,
-      );
-      sendAchieverNotification(allTokens, savedAchiever).catch((err) =>
-        console.error("Achiever push notification error:", err),
-      );
+    const allTokens = users.flatMap((u) => u.pushTokens || []);
+
+    if (allTokens.length) {
+      sendAchieverNotification(allTokens, achiever)
+        .catch((err) =>
+          console.error("Achiever notification error:", err)
+        );
     }
 
-    res
-      .status(201)
-      .json({
-        message: "Achiever saved and notification sent",
-        achiever: savedAchiever,
-      });
+    return res.status(201).json({
+      message: "Achiever saved and notification sent",
+      achiever,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Create achiever error:", err);
+    return res.status(500).json({
+      message: "Failed to create achiever",
+      error: err.message,
+    });
   }
 };
+
 
 // READ (ALL) with Pagination and Search
 exports.getAchievers = async (req, res) => {
@@ -129,48 +139,54 @@ exports.updateAchiever = async (req, res) => {
     const { id } = req.params;
     const updateData = { ...req.body };
 
-    // Parse students if it's a string
     if (typeof updateData.students === "string") {
       updateData.students = JSON.parse(updateData.students);
     }
 
-    // Handle File Uploads (Poster + Student Images)
-    if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        if (file.fieldname === "posterImage") {
-          updateData.posterImage = file.path;
-        } else if (file.fieldname.startsWith("studentImage_")) {
-          const index = parseInt(file.fieldname.split("_")[1]);
-          if (updateData.students && updateData.students[index]) {
-            updateData.students[index].imageUrl = file.path;
+    const existingAchiever = await Achiever.findById(id);
+    if (!existingAchiever) {
+      return res.status(404).json({ message: "Achiever not found" });
+    }
+
+    const students = updateData.students || existingAchiever.students || [];
+
+    if (Array.isArray(req.files)) {
+      for (const file of req.files) {
+        const { fieldname, filename } = file;
+
+        if (fieldname === "posterImage") {
+          updateData.posterImage = `/uploads/${filename}`;
+        }
+
+        if (fieldname.startsWith("studentImage_")) {
+          const index = Number(fieldname.split("_")[1]);
+          if (students[index]) {
+            students[index].imageUrl = `/uploads/${filename}`;
           }
         }
-      });
+      }
     }
 
-    // Parse students if it's a string
-    if (typeof updateData.students === "string") {
-      updateData.students = JSON.parse(updateData.students);
-    }
+    updateData.students = students;
 
     const updatedAchiever = await Achiever.findByIdAndUpdate(
       id,
-      updateData,
-      { new: true }, // return updated document
+      { $set: updateData },
+      { new: true, runValidators: true }
     );
-
-    if (!updatedAchiever) {
-      return res.status(404).json({ message: "Achiever not found" });
-    }
 
     res.json({
       message: "Achiever updated successfully",
       achiever: updatedAchiever,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      message: "Failed to update achiever",
+      error: err.message,
+    });
   }
 };
+
 
 // DELETE (Soft Delete)
 exports.deleteAchiever = async (req, res) => {
