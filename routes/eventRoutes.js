@@ -25,6 +25,12 @@ router.put(
   updateEvent,
 );
 router.delete("/:id", protect, adminOnly, deleteEvent);
+
+
+
+//test
+
+
 router.post("/test-notification", protect, adminOnly, async (req, res) => {
   try {
     const users = await User.find({ status: true });
