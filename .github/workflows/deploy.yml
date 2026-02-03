@@ -21,7 +21,23 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Load NVM (Node Version Manager)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            # Install/Use Node.js 20
+            nvm install 20
+            nvm use 20
+
+            # Navigate to directory
             cd /home/ubuntu/be
+
+            # Pull latest code
             git pull origin backend
+
+            # Install dependencies
             npm install
-            pm2 restart backend
+
+            # Start or Restart using ecosystem file
+            pm2 startOrRestart ecosystem.config.js --env production
+            pm2 save
