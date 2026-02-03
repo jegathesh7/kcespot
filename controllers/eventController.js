@@ -3,6 +3,9 @@ const Event = require("../models/Event.js");
 const User = require("../models/User.js");
 const { sendEventNotification } = require("../service/pushNotificationService");
 const nodemailer = require("nodemailer")
+const mongoose = require('mongoose')
+const path = require("path");
+
 // CREATE event
 exports.createEvent = async (req, res) => {
   try {
@@ -121,14 +124,27 @@ exports.sendEventInfo = async (req, res) => {
   try {
     const { id, userId } = req.body;
 
+    if (!id || !userId) {
+      return res.status(400).json({ message: "Event ID and User ID are required" });
+    }
+
+    // Validate ObjectIds
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Event ID" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid User ID" });
+    }
+
     const requestEvent = await Event.findById(id);
     if (!requestEvent) {
-      return res.json({ message: "Event Not Found" });
+      return res.status(404).json({ message: "Event Not Found" });
     }
 
     const fromInfo = await User.findById(userId);
     if (!fromInfo) {
-      return res.json({ message: "Admin not found" });
+      return res.status(404).json({ message: "Admin not found" });
     }
 
     const transporter = nodemailer.createTransport({
@@ -139,6 +155,16 @@ exports.sendEventInfo = async (req, res) => {
       }
     });
 
+    // Resolve image path safely
+    let imagePath = null;
+    if (requestEvent.eventImage) {
+      imagePath = path.join(
+        __dirname,
+        "..",
+        requestEvent.eventImage.replace(/\\/g, "/")
+      );
+    }
+
     const mailOptions = {
       from: `"${fromInfo.name}" <${process.env.EMAIL_USER}>`,
       to: "siranjeevi0619@gmail.com",
@@ -146,11 +172,23 @@ exports.sendEventInfo = async (req, res) => {
       html: eventEmailTemplate(requestEvent, fromInfo)
     };
 
+    // Attach image ONLY if it exists
+    if (imagePath) {
+      mailOptions.attachments = [
+        {
+          filename: "event-poster.jpg",
+          path: imagePath,
+          cid: "eventimage"
+        }
+      ];
+    }
+
     await transporter.sendMail(mailOptions);
 
     return res.json({ message: "Event information sent successfully" });
 
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ error: error.message });
   }
 };
