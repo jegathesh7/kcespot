@@ -259,7 +259,7 @@ exports.login = async (req, res) => {
         message: "Email and password are required",
       });
     }
-
+     email = email.toLowerCase();
     const user = await User.findOne({ email });
 
     // 2. User not found
