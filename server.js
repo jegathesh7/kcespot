@@ -62,3 +62,7 @@ app.listen(PORT, () => {
 app.use("/api/check-aws", (req, res) => {
   return res.json({ message: "hello hero" });
 });
+
+app.use("/api/host-contribute", () => {
+  return res.json({ message: "hello ace" });
+});
