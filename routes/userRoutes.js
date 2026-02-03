@@ -13,7 +13,7 @@ const { protect, adminOnly } = require("../middleware/authMiddleware");
 // 🔐 ADMIN ACCESS ONLY
 router.get("/", protect, adminOnly, getUsers);
 router.post("/", protect, adminOnly, createUser);
-router.put("/:id", protect, adminOnly, updateUser);
+router.put("/:id", protect, updateUser);
 router.delete("/:id", protect, adminOnly, deleteUser);
 router.post("/save-push-token", protect, savePushToken);
 router.post("/save-token", protect, savePushToken); // Alias for compatibility

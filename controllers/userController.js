@@ -13,23 +13,23 @@ exports.createUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
   try {
     const { page = 1, limit = 10, search, college } = req.query;
-    
+
     const query = {};
-    
+
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } }
+        { email: { $regex: search, $options: "i" } },
       ];
     }
-    
+
     // Filter by College
     if (college) {
       query.collegeName = college;
     }
 
     const count = await User.countDocuments(query);
-    
+
     const users = await User.find(query)
       .sort({ createdAt: -1 })
       .limit(limit * 1)
@@ -40,7 +40,7 @@ exports.getUsers = async (req, res) => {
       users,
       totalPages: Math.ceil(count / limit),
       currentPage: Number(page),
-      totalUsers: count
+      totalUsers: count,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -49,14 +49,52 @@ exports.getUsers = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const updated = await User.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
+    const userId = req.params.id;
+
+    // Check if the requester is the user themselves or an admin
+    // req.user is set by the protect middleware
+    if (req.user.id !== userId && req.user.role !== "admin") {
+      return res.status(403).json({
+        status: "failed",
+        statusCode: 403,
+        message: "You are not authorized to update this profile",
+      });
+    }
+
+    // Prevent updating sensitive fields via this endpoint if needed
+    // const { password, role, ...updateData } = req.body;
+
+    // Find and update
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: req.body },
+      { new: true, runValidators: true },
+    ).select(
+      "-password -otp -otpExpires -resetPasswordOtp -resetPasswordExpires",
     );
-    res.json(updated);
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: "failed",
+        statusCode: 404,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "Profile updated successfully",
+      data: updatedUser,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Update User Error:", err);
+    res.status(500).json({
+      status: "failed",
+      statusCode: 500,
+      message: "Internal Server Error",
+      error: err.message,
+    });
   }
 };
 
