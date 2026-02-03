@@ -1,0 +1,43 @@
+name: Auto Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - backend
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Load NVM (Node Version Manager)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            # Install/Use Node.js 20
+            nvm install 20
+            nvm use 20
+
+            # Navigate to directory
+            cd /home/ubuntu/be
+
+            # Pull latest code
+            git pull origin backend
+
+            # Install dependencies
+            npm install
+
+            # Start or Restart using ecosystem file
+            pm2 startOrRestart ecosystem.config.js --env production
+            pm2 save
