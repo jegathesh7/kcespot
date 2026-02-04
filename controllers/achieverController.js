@@ -10,6 +10,11 @@ exports.createAchiever = async (req, res) => {
   try {
     const entryData = { ...req.body };
 
+    // Sanitize posterImage: if it's an object (e.g. {}), remove it so Mongoose validation doesn't fail
+    if (entryData.posterImage && typeof entryData.posterImage === "object") {
+      delete entryData.posterImage;
+    }
+
     // Parse students if it's a string (from FormData)
     if (typeof entryData.students === "string") {
       entryData.students = JSON.parse(entryData.students);
@@ -46,12 +51,10 @@ exports.createAchiever = async (req, res) => {
       );
     }
 
-    res
-      .status(201)
-      .json({
-        message: "Achiever saved and notification sent",
-        achiever: savedAchiever,
-      });
+    res.status(201).json({
+      message: "Achiever saved and notification sent",
+      achiever: savedAchiever,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -62,7 +65,7 @@ exports.getAchievers = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", college = "" } = req.query;
 
-    const query = { isDeleted: false };
+    const query = { isDeleted: false,status:true };
 
     if (search) {
       query.$or = [
@@ -127,7 +130,17 @@ exports.getAchievers = async (req, res) => {
 exports.updateAchiever = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log("Update Achiever Body:", req.body);
+    console.log("Update Achiever Files:", req.files);
     const updateData = { ...req.body };
+    let posterImageWarning = null;
+
+    // Sanitize posterImage: if it's an object (e.g. {}), remove it so Mongoose validation doesn't fail
+    if (updateData.posterImage && typeof updateData.posterImage === "object") {
+      delete updateData.posterImage;
+      posterImageWarning =
+        "posterImage was received as an object (e.g. {}), not a file. Please ensure you are sending a File/Blob in FormData.";
+    }
 
     // Parse students if it's a string
     if (typeof updateData.students === "string") {
@@ -148,11 +161,6 @@ exports.updateAchiever = async (req, res) => {
       });
     }
 
-    // Parse students if it's a string
-    if (typeof updateData.students === "string") {
-      updateData.students = JSON.parse(updateData.students);
-    }
-
     const updatedAchiever = await Achiever.findByIdAndUpdate(
       id,
       updateData,
@@ -163,10 +171,15 @@ exports.updateAchiever = async (req, res) => {
       return res.status(404).json({ message: "Achiever not found" });
     }
 
-    res.json({
+    const response = {
       message: "Achiever updated successfully",
       achiever: updatedAchiever,
-    });
+    };
+    if (posterImageWarning) {
+      response.warning = posterImageWarning;
+    }
+
+    res.json(response);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
