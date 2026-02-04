@@ -12,14 +12,18 @@ const generateOTP = () => {
 // REGISTER (Step 1: Create User & Send OTP)
 exports.register = async (req, res) => {
   try {
-    const { name, collegeName, email, password, role } = req.body;
+    const { name, fullName, collegeName, email, password, role, rollNo } =
+      req.body;
+
+    const userName = name || fullName;
 
     // 1. Check for missing fields
-    if (!name || !collegeName || !email || !password) {
+    if (!userName || !collegeName || !email || !password || !rollNo) {
       return res.status(400).json({
         status: "failed",
         statusCode: 400,
-        message: "All fields (name, collegeName, email, password) are required",
+        message:
+          "All fields (name, collegeName, email, password, rollNo) are required",
       });
     }
 
@@ -59,7 +63,8 @@ exports.register = async (req, res) => {
 
     if (user) {
       // Update existing unverified user
-      user.name = name;
+      user.name = userName;
+      user.rollNo = rollNo;
       user.collegeName = collegeName;
       user.password = hashedPassword;
       user.role = role || "user";
@@ -69,7 +74,8 @@ exports.register = async (req, res) => {
     } else {
       // Create new user
       user = await User.create({
-        name,
+        name: userName,
+        rollNo,
         collegeName,
         email,
         password: hashedPassword,
@@ -86,7 +92,7 @@ exports.register = async (req, res) => {
     const html = `
       <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
         <h2 style="color: #004d99;">Verify Your Account</h2>
-        <p>Hi ${name},</p>
+        <p>Hi ${userName},</p>
         <p>Your OTP for verification is:</p>
         <h1 style="background: #f4f4f4; padding: 10px; display: inline-block; border-radius: 5px;">${otp}</h1>
         <p>This OTP expires in 15 minutes.</p>
