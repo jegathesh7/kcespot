@@ -4,10 +4,16 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     collegeName: { type: String, required: true },
-    email: { type: String, required: true, unique: true ,lowercase: true,trim: true,},
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
     password: { type: String, required: true },
     rollNo: { type: String, required: true },
-    batch:{type:String,required:true},
+    batch: { type: String, required: false },
     // 🔑 ROLE
     role: {
       type: String,
@@ -26,7 +32,7 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("User", userSchema);
