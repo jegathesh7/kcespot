@@ -27,7 +27,9 @@ exports.sendEventNotification = async (pushTokens, event) => {
       title: event.title,
       body: "Registrations are now open! Tap to register. 📅",
       data: {
-        eventId: event._id.toString(),
+        type: "event",
+        id: event._id.toString(),
+        screen: "EventDetails",
       },
       _displayInForeground: true, // For Expo Go
     }));
@@ -62,7 +64,9 @@ exports.sendEventNotification = async (pushTokens, event) => {
         body: "Registrations are now open! Tap to register. 📅",
       },
       data: {
-        eventId: event._id.toString(),
+        type: "event",
+        id: event._id.toString(),
+        screen: "EventDetails",
       },
       tokens: fcmTokens,
     };
@@ -110,8 +114,9 @@ exports.sendAchieverNotification = async (pushTokens, achiever) => {
       title: notificationTitle,
       body: notificationBody,
       data: {
-        achieverId: achiever._id.toString(),
-        type: "achiever", // To handle navigation in frontend
+        type: "achiever",
+        id: achiever._id.toString(),
+        screen: "EventDetails",
       },
     }));
 
@@ -134,8 +139,9 @@ exports.sendAchieverNotification = async (pushTokens, achiever) => {
         body: notificationBody,
       },
       data: {
-        achieverId: achiever._id.toString(),
         type: "achiever",
+        id: achiever._id.toString(),
+        screen: "EventDetails",
       },
       tokens: fcmTokens,
     };
