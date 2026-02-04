@@ -56,7 +56,7 @@ exports.getEvents = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", campus = "" } = req.query;
 
-    const query = { isDeleted: false };
+    const query = { isDeleted: false,status:true };
 
     if (search) {
       query.$or = [
