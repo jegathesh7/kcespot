@@ -72,7 +72,9 @@ exports.getEvents = async (req, res) => {
     // Filter events based on user visibility
     if (req.user && req.user.id) {
       const user = await User.findById(req.user.id);
-      if (user && user.email) {
+
+      // If user is admin, show all events. Otherwise check email visibility.
+      if (user && user.role !== "admin" && user.email) {
         const email = user.email.toLowerCase();
 
         if (email.includes("@kce.ac.in")) {
