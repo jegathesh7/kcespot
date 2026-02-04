@@ -56,7 +56,7 @@ exports.getEvents = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", campus = "" } = req.query;
 
-    const query = { isDeleted: false,status:true };
+    const query = { isDeleted: false, status: true };
 
     if (search) {
       query.$or = [
@@ -67,6 +67,24 @@ exports.getEvents = async (req, res) => {
 
     if (campus) {
       query.campus = { $regex: `^${campus}$`, $options: "i" };
+    }
+
+    // Filter events based on user visibility
+    if (req.user && req.user.id) {
+      const user = await User.findById(req.user.id);
+      if (user && user.email) {
+        const email = user.email.toLowerCase();
+
+        if (email.includes("@kce.ac.in")) {
+          query.visibility = "KCE";
+        } else if (email.includes("@karpagamtech.in")) {
+          query.visibility = "KIT";
+        } else if (email.includes("@kahedu.edu.in")) {
+          query.visibility = "KAHE";
+        } else if (email.includes("karpagam")) {
+          // Show all events
+        }
+      }
     }
 
     const count = await Event.countDocuments(query);
