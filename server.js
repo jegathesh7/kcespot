@@ -40,7 +40,6 @@ app.options(/.*/, cors(corsOptions));
 
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
-app.use(require("cookie-parser")());
 
 // Make uploads folder static
 app.use("/uploads", express.static("uploads"));

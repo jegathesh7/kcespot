@@ -309,13 +309,6 @@ exports.login = async (req, res) => {
       console.log(`[Login] Saved new push token for user ${user.email}`);
     }
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === "true",
-      sameSite: process.env.COOKIE_SAMESITE,
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-
     res.json({
       status: "success",
       statusCode: 200,
@@ -326,7 +319,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
       },
-      // token: token,
+      token: token,
     });
   } catch (err) {
     res.status(500).json({

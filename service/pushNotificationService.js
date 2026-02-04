@@ -16,6 +16,11 @@ exports.sendEventNotification = async (pushTokens, event) => {
 
   // --- Send Expo Notifications ---
   if (expoTokens.length > 0) {
+    console.log(
+      "[Notification Debug] Sending Expo notifications to:",
+      expoTokens,
+    );
+
     const messages = expoTokens.map((token) => ({
       to: token,
       sound: "default",
@@ -24,13 +29,24 @@ exports.sendEventNotification = async (pushTokens, event) => {
       data: {
         eventId: event._id.toString(),
       },
+      _displayInForeground: true, // For Expo Go
     }));
 
     const chunks = expo.chunkPushNotifications(messages);
 
     for (const chunk of chunks) {
       try {
-        await expo.sendPushNotificationsAsync(chunk);
+        const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+        console.log("[Expo Debug] Tickets received:", ticketChunk);
+
+        // Check for specific errors
+        ticketChunk.forEach((ticket, index) => {
+          if (ticket.status === "error") {
+            console.error(
+              `[Expo Error] Error sending to ${chunk[index].to}: ${ticket.message} (${ticket.details?.error})`,
+            );
+          }
+        });
       } catch (error) {
         console.error("Expo push error:", error);
       }

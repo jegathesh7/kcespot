@@ -4,12 +4,8 @@ const jwt = require("jsonwebtoken");
 exports.protect = (req, res, next) => {
   let token;
 
-  // console.log("Cookies:", req.cookies); // DEBUG
-  // console.log("Headers Auth:", req.headers.authorization); // DEBUG
-
-  if (req.cookies.token) {
-    token = req.cookies.token;
-  } else if (
+  // Check for token in Authorization header
+  if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer ")
   ) {
