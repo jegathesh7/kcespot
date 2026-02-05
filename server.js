@@ -68,5 +68,8 @@ app.use("/api/check-aws", (req, res) => {
 });
 
 app.use("/api/host-contribute", (req, res) => {
-  return res.json({ message: "hello ace" });
+  return res.json({ message: "hello ace im spotlight" });
 });
+
+
+
