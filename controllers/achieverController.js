@@ -126,6 +126,73 @@ exports.getAchievers = async (req, res) => {
   }
 };
 
+// READ (ALL) with Pagination and Search for Admin
+exports.getAdminAchivers = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = "", college = "" } = req.query;
+
+    const query = { isDeleted: false };
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { college: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } }, // Added description for completeness
+      ];
+    }
+
+    if (college) {
+      query.college = { $regex: `^${college}$`, $options: "i" };
+    }
+
+    const count = await Achiever.countDocuments(query);
+
+    let achievers = await Achiever.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .lean(); // Use lean() to get plain JS objects
+
+    // ENRICH DATA: Add userReaction field
+    if (req.user && req.user.id) {
+      const achieverIds = achievers.map((a) => a._id);
+
+      const userReactions = await Reaction.find({
+        user: req.user.id,
+        achiever: { $in: achieverIds },
+      });
+
+      // Create a map: achieverId -> reactionType
+      const reactionMap = {};
+      userReactions.forEach((reaction) => {
+        reactionMap[reaction.achiever.toString()] = reaction.type;
+      });
+
+      // Attach to achievers
+      achievers = achievers.map((achiever) => ({
+        ...achiever,
+        userReaction: reactionMap[achiever._id.toString()] || null,
+      }));
+    } else {
+      // If no user is logged in (just in case), ensure field exists as null
+      achievers = achievers.map((achiever) => ({
+        ...achiever,
+        userReaction: null,
+      }));
+    }
+
+    res.json({
+      data: achievers,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+      totalItems: count,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
 // UPDATE
 exports.updateAchiever = async (req, res) => {
   try {

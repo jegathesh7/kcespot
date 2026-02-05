@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   createEvent,
   getEvents,
+  getEventsforAdmin,
   updateEvent,
   deleteEvent,
   sendEventInfo,
@@ -17,6 +18,7 @@ router.post("/post-event", protect, adminOnly, sendEventInfo)
 
 router.post("/", protect, adminOnly, upload.single("eventImage"), createEvent);
 router.get("/", protect, getEvents);
+router.get("/admin", protect, adminOnly, getEventsforAdmin);
 router.put(
   "/:id",
   protect,
