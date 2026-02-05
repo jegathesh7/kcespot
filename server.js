@@ -67,6 +67,6 @@ app.use("/api/check-aws", (req, res) => {
   return res.json({ message: "hello hero" });
 });
 
-app.use("/api/host-contribute", () => {
+app.use("/api/host-contribute", (req, res) => {
   return res.json({ message: "hello ace" });
 });
