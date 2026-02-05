@@ -105,7 +105,40 @@ exports.getEvents = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// GET all events with Pagination, Search, and Filter for Admin
+exports.getEventsforAdmin = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = "", campus = "" } = req.query;
 
+    const query = { isDeleted: false };
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { campus: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (campus) {
+      query.campus = { $regex: `^${campus}$`, $options: "i" };
+    }
+
+    const count = await Event.countDocuments(query);
+    const events = await Event.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    res.json({
+      data: events,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+      totalEvents: count,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 // UPDATE event
 exports.updateEvent = async (req, res) => {
   try {

@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   createAchiever,
   getAchievers,
+  getAdminAchivers,
   updateAchiever,
   deleteAchiever,
   updateReaction,
@@ -13,6 +14,7 @@ const { protect, adminOnly } = require("../middleware/authMiddleware");
 
 router.post("/", protect, adminOnly, upload.any(), createAchiever);
 router.get("/", protect, getAchievers);
+router.get("/admin",protect,getAdminAchivers);
 router.put("/:id", protect, adminOnly, upload.any(), updateAchiever);
 router.delete("/:id", protect, adminOnly, deleteAchiever);
 router.patch("/reaction/:id", protect, updateReaction);
