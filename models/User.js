@@ -20,8 +20,13 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "user"],
       default: "user",
     },
+    pointsBalance: { type: Number, default: 0 },
+    lifetimePoints: { type: Number, default: 0 },
+    lastPointsResetDate: { type: Date, default: Date.now },
+    badges: { type: [String], default: [] },
 
     status: { type: Boolean, default: true },
+
     isVerified: { type: Boolean, default: false },
     otp: { type: String },
     otpExpires: { type: Date },

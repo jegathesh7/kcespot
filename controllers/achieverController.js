@@ -38,7 +38,35 @@ exports.createAchiever = async (req, res) => {
     const achiever = new Achiever(entryData);
     const savedAchiever = await achiever.save();
 
+    // --- Reward System Integration: Admin Success Post ---
+    // If Admin posts, award points automatically to found students
+    const { awardPoints } = require("./rewardController");
+    if (savedAchiever.students && savedAchiever.students.length > 0) {
+      for (const s of savedAchiever.students) {
+        if (s.rollNo) {
+          const user = await User.findOne({ rollNo: s.rollNo });
+          if (user) {
+            // Find rule for this category
+            const PointRule = require("../models/PointRule");
+            const rule = await PointRule.findOne({
+              category: savedAchiever.category,
+            });
+            const points = rule ? rule.points : 100; // Fallback to 100 for admin posts if no rule
+
+            await awardPoints(
+              user._id,
+              points,
+              `Admin Achievement Post: ${savedAchiever.category}`,
+              savedAchiever._id,
+              "Achiever",
+            );
+          }
+        }
+      }
+    }
+
     // --- Send Push Notification ---
+
     const users = await User.find({ status: true });
     const allTokens = users.flatMap((user) => user.pushTokens || []);
 
@@ -65,7 +93,7 @@ exports.getAchievers = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", college = "" } = req.query;
 
-    const query = { isDeleted: false,status:true };
+    const query = { isDeleted: false, status: true };
 
     if (search) {
       query.$or = [
@@ -191,7 +219,6 @@ exports.getAdminAchivers = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 // UPDATE
 exports.updateAchiever = async (req, res) => {

@@ -99,7 +99,7 @@ exports.getEvents = async (req, res) => {
       data: events,
       totalPages: Math.ceil(count / limit),
       currentPage: Number(page),
-      totalEvents: count,
+      totalItems: count,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -133,7 +133,7 @@ exports.getEventsforAdmin = async (req, res) => {
       data: events,
       totalPages: Math.ceil(count / limit),
       currentPage: Number(page),
-      totalEvents: count,
+      totalItems: count,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
