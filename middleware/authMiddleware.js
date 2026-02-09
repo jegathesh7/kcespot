@@ -39,14 +39,23 @@ exports.protect = (req, res, next) => {
 
 // 🔐 ADMIN ONLY
 exports.adminOnly = (req, res, next) => {
-  if (req.user.role !== "admin") {
+  if (req.user.role !== "admin" ) {
     return res.status(403).json({ message: "Admin access only" });
   }
   next();
 };
 
+// 🔐 STAFF ONLY (Admin or Instructor)
+exports.staffOnly = (req, res, next) => {
+  const allowedRoles = ["admin", "instructor"];
+  if (!allowedRoles.includes(req.user.role)) {
+    return res.status(403).json({ message: "Staff access only" });
+  }
+  next();
+};
+
 exports.userOnly = (req, res, next) => {
-  if (req.user.role !== "user") {
+  if (req.user.role !== "user" && req.user.role !== "student") {
     return res.status(403).json({ message: "User access only" });
   }
   next();

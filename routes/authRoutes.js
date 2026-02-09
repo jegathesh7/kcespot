@@ -12,6 +12,7 @@ const {
   resetPassword,
   changePassword,
 } = require("../controllers/authController");
+const { loginStaff } = require("../controllers/staffController");
 
 // Registration Flow
 router.post("/register", register);
@@ -20,6 +21,7 @@ router.post("/resend-registration-otp", resendRegistrationOtp);
 
 // Login
 router.post("/login", login);
+router.post("/staff-login", loginStaff);
 
 // Password Reset Flow
 router.post("/forgot-password", forgotPassword);

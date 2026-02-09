@@ -55,6 +55,9 @@ app.use("/api/achievers", require("./routes/achieverRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/unstop", require("./routes/proxyRoutes"));
+app.use("/api/rewards", require("./routes/rewardRoutes"));
+app.use("/api/semester", require("./routes/semesterRoutes"));
+app.use("/api/staff", require("./routes/staffRoutes"));
 
 const PORT = process.env.PORT || 5000;
 
@@ -70,6 +73,3 @@ app.use("/api/check-aws", (req, res) => {
 app.use("/api/host-contribute", (req, res) => {
   return res.json({ message: "hello ace im spotlight" });
 });
-
-
-

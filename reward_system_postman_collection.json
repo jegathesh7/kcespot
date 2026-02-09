@@ -1,0 +1,250 @@
+{
+  "info": {
+    "name": "KCE Reward System",
+    "description": "API collection for the Reward Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Staff Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-app-client", "value": "kce-admin" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"staff@kce.ac.in\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{host}}/api/auth/staff-login",
+              "host": ["{{host}}"],
+              "path": ["api", "auth", "staff-login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Staff Management",
+      "item": [
+        {
+          "name": "Add Staff",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" },
+              { "key": "x-app-client", "value": "kce-admin" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Instructor Name\",\n  \"email\": \"instructor@kce.ac.in\",\n  \"password\": \"password123\",\n  \"role\": \"instructor\",\n  \"collegeName\": \"KCE\",\n  \"department\": \"CSE\"\n}"
+            },
+            "url": {
+              "raw": "{{host}}/api/staff",
+              "host": ["{{host}}"],
+              "path": ["api", "staff"]
+            }
+          }
+        },
+        {
+          "name": "Get All Staff",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" },
+              { "key": "x-app-client", "value": "kce-admin" }
+            ],
+            "url": {
+              "raw": "{{host}}/api/staff",
+              "host": ["{{host}}"],
+              "path": ["api", "staff"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Semester Management",
+      "item": [
+        {
+          "name": "Add/Update Semester",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" },
+              { "key": "x-app-client", "value": "kce-admin" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"collegeName\": \"KCE\",\n  \"batch\": \"2024-2028\",\n  \"semester\": 1,\n  \"startDate\": \"2026-02-01T00:00:00Z\",\n  \"endDate\": \"2026-06-30T23:59:59Z\"\n}"
+            },
+            "url": {
+              "raw": "{{host}}/api/semester",
+              "host": ["{{host}}"],
+              "path": ["api", "semester"]
+            }
+          }
+        },
+        {
+          "name": "Get Semesters",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" },
+              { "key": "x-app-client", "value": "kce-admin" }
+            ],
+            "url": {
+              "raw": "{{host}}/api/semester",
+              "host": ["{{host}}"],
+              "path": ["api", "semester"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reward Catalog",
+      "item": [
+        {
+          "name": "Add Reward Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" },
+              { "key": "x-app-client", "value": "kce-admin" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"KCE Hoodie\",\n  \"description\": \"Premium Hoodie\",\n  \"pointsCost\": 500,\n  \"stock\": 50,\n  \"category\": \"Merchandise\"\n}"
+            },
+            "url": {
+              "raw": "{{host}}/api/rewards/catalog",
+              "host": ["{{host}}"],
+              "path": ["api", "rewards", "catalog"]
+            }
+          }
+        },
+        {
+          "name": "Get Catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-app-client", "value": "kce-admin" }
+            ],
+            "url": {
+              "raw": "{{host}}/api/rewards/catalog",
+              "host": ["{{host}}"],
+              "path": ["api", "rewards", "catalog"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Achievements",
+      "item": [
+        {
+          "name": "Submit Achievement",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-app-client", "value": "kce-admin" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Hackathon Winner", "type": "text" },
+                { "key": "category", "value": "Technology", "type": "text" },
+                { "key": "description", "value": "Won 1st prize", "type": "text" },
+                { "key": "image", "type": "file", "src": "" },
+                { "key": "evidenceUrl", "value": "https://example.com/image.jpg", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{host}}/api/rewards/submit",
+              "host": ["{{host}}"],
+              "path": ["api", "rewards", "submit"]
+            }
+          }
+        },
+
+        {
+          "name": "Verify Achievement",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" },
+              { "key": "x-app-client", "value": "kce-admin" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"pointsAwarded\": 100\n}"
+            },
+            "url": {
+              "raw": "{{host}}/api/rewards/verify/:id",
+              "host": ["{{host}}"],
+              "path": ["api", "rewards", "verify", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Student Profile",
+      "item": [
+        {
+          "name": "Get My Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-app-client", "value": "kce-admin" }
+            ],
+            "url": {
+              "raw": "{{host}}/api/rewards/my-stats",
+              "host": ["{{host}}"],
+              "path": ["api", "rewards", "my-stats"]
+            }
+          }
+        },
+        {
+          "name": "Redeem Reward",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-app-client", "value": "kce-admin" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rewardId\": \"698962af1008fa22d59fb7ee\"\n}"
+            },
+            "url": {
+              "raw": "{{host}}/api/rewards/redeem",
+              "host": ["{{host}}"],
+              "path": ["api", "rewards", "redeem"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "host", "value": "http://localhost:5000" },
+    { "key": "token", "value": "STUDENT_JWT_TOKEN" },
+    { "key": "staffToken", "value": "STAFF_JWT_TOKEN" }
+  ]
+}
