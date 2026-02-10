@@ -63,7 +63,17 @@ const PointRule = require("../models/PointRule");
 // @route   POST /api/rewards/submit
 exports.submitAchievement = async (req, res) => {
   try {
-    const { title, category, description, evidenceUrl } = req.body;
+    const entryData = { ...req.body };
+
+    // Sanitize evidenceImage: if it's an object (e.g. {}), remove it so Mongoose validation doesn't fail
+    if (
+      entryData.evidenceImage &&
+      typeof entryData.evidenceImage === "object"
+    ) {
+      delete entryData.evidenceImage;
+    }
+
+    const { title, category, description, evidenceUrl } = entryData;
     const student = await User.findById(req.user.id);
 
     if (!student) return res.status(404).json({ message: "Student not found" });

@@ -21,7 +21,12 @@ const {
 const upload = require("../middleware/upload");
 
 // Student Routes
-router.post("/submit", protect, upload.single("image"), submitAchievement);
+router.post(
+  "/submit",
+  protect,
+  upload.single("evidenceImage"),
+  submitAchievement,
+);
 
 router.get("/my-stats", protect, getMyStats);
 router.get("/catalog", protect, getCatalog);
