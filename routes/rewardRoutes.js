@@ -11,6 +11,7 @@ const {
   getPointRules,
   getAllBadges,
   getSubmissions,
+  getStudentAchievements,
 } = require("../controllers/rewardController");
 const {
   protect,
@@ -30,6 +31,7 @@ router.post(
 
 router.get("/my-stats", protect, getMyStats);
 router.get("/catalog", protect, getCatalog);
+router.get("/my-submissions", protect, getStudentAchievements);
 router.post("/redeem", protect, redeemReward);
 router.get("/badges", protect, getAllBadges);
 

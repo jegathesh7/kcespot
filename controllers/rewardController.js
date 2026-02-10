@@ -394,14 +394,14 @@ exports.getAllBadges = async (req, res) => {
   }
 };
 
-// @desc    Get Submissions (Staff Only)
+// @desc    Get Submissions (Staff/Admin Only)
 // @route   GET /api/rewards/submissions
 exports.getSubmissions = async (req, res) => {
   try {
     const {
       page = 1,
       limit = 10,
-      status = "pending",
+      status, // Can be pending, approved, rejected, resubmit, or empty for all
       category,
       collegeName,
       department,
@@ -409,8 +409,14 @@ exports.getSubmissions = async (req, res) => {
       search = "",
     } = req.query;
 
-    const filter = { status };
+    const filter = {};
 
+    // 1. Status Filter
+    if (status && status !== "all") {
+      filter.status = status;
+    }
+
+    // 2. Instructor Category Restriction
     if (req.user.role === "instructor") {
       const staff = await Staff.findById(req.user.id);
       if (staff && staff.assignedCategory) {
@@ -418,15 +424,28 @@ exports.getSubmissions = async (req, res) => {
       }
     }
 
+    // 3. Other Basic Filters
     if (category) filter.category = category;
     if (collegeName) filter.collegeName = collegeName;
     if (department) filter.department = department;
     if (studentId) filter.studentId = studentId;
 
+    // 4. Advanced Search (Achievement Details OR Student Details)
     if (search) {
+      // Find students matching name or rollNo
+      const matchingStudents = await User.find({
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { rollNo: { $regex: search, $options: "i" } },
+        ],
+      }).select("_id");
+
+      const studentIds = matchingStudents.map((s) => s._id);
+
       filter.$or = [
         { title: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
+        { studentId: { $in: studentIds } },
       ];
     }
 
@@ -438,6 +457,7 @@ exports.getSubmissions = async (req, res) => {
       .skip((page - 1) * limit);
 
     res.json({
+      success: true,
       data: submissions,
       totalPages: Math.ceil(count / limit),
       currentPage: Number(page),
@@ -491,6 +511,38 @@ exports.getRedemptionHistory = async (req, res) => {
 
     res.json({
       data: history,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+      totalItems: count,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+// @desc    Get Student Achievements (Paginated)
+// @route   GET /api/rewards/my-submissions
+exports.getStudentAchievements = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status, search = "" } = req.query;
+    const query = { studentId: req.user.id };
+
+    if (status) query.status = status;
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const count = await AchievementSubmission.countDocuments(query);
+    const achievements = await AchievementSubmission.find(query)
+      .sort("-createdAt")
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    res.json({
+      success: true,
+      data: achievements,
       totalPages: Math.ceil(count / limit),
       currentPage: Number(page),
       totalItems: count,
