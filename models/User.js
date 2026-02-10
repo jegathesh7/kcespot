@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     rollNo: { type: String, required: true },
     batch: { type: String, required: false },
+    department: { type: String, required: false },
     // 🔑 ROLE
     role: {
       type: String,

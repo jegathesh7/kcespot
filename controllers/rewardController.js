@@ -65,14 +65,6 @@ exports.submitAchievement = async (req, res) => {
   try {
     const entryData = { ...req.body };
 
-    // Sanitize evidenceImage: if it's an object (e.g. {}), remove it so Mongoose validation doesn't fail
-    if (
-      entryData.evidenceImage &&
-      typeof entryData.evidenceImage === "object"
-    ) {
-      delete entryData.evidenceImage;
-    }
-
     const { title, category, description, evidenceUrl } = entryData;
     const student = await User.findById(req.user.id);
 
