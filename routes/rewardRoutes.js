@@ -11,7 +11,9 @@ const {
   getPointRules,
   getAllBadges,
   getSubmissions,
+  getSubmissionDetails,
   getStudentAchievements,
+  getCategories,
 } = require("../controllers/rewardController");
 const {
   protect,
@@ -34,6 +36,7 @@ router.get("/catalog", protect, getCatalog);
 router.get("/my-submissions", protect, getStudentAchievements);
 router.post("/redeem", protect, redeemReward);
 router.get("/badges", protect, getAllBadges);
+router.get("/categories", protect, getCategories);
 
 // History Routes (Paginated)
 router.get(
@@ -50,6 +53,7 @@ router.get(
 // Staff/Admin Routes
 router.get("/submissions", protect, staffOnly, getSubmissions);
 router.patch("/verify/:id", protect, staffOnly, verifyAchievement);
+router.get("/submission/:id", protect, staffOnly, getSubmissionDetails);
 
 router.post("/catalog", protect, adminOnly, addRewardItem);
 router.post("/rules", protect, adminOnly, upsertPointRule);

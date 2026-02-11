@@ -12,18 +12,33 @@ const generateOTP = () => {
 // REGISTER (Step 1: Create User & Send OTP)
 exports.register = async (req, res) => {
   try {
-    const { name, fullName, collegeName, email, password, role, rollNo } =
-      req.body;
+    const {
+      name,
+      fullName,
+      collegeName,
+      email,
+      password,
+      role,
+      rollNo,
+      department,
+    } = req.body;
 
     const userName = name || fullName;
 
     // 1. Check for missing fields
-    if (!userName || !collegeName || !email || !password || !rollNo) {
+    if (
+      !userName ||
+      !collegeName ||
+      !email ||
+      !password ||
+      !rollNo ||
+      !department
+    ) {
       return res.status(400).json({
         status: "failed",
         statusCode: 400,
         message:
-          "All fields (name, collegeName, email, password, rollNo) are required",
+          "All fields (name, collegeName, email, password, rollNo, department) are required",
       });
     }
 
@@ -68,6 +83,7 @@ exports.register = async (req, res) => {
       user.collegeName = collegeName;
       user.password = hashedPassword;
       user.role = role || "user";
+      user.department = department;
       user.otp = otp;
       user.otpExpires = otpExpires;
       await user.save();
@@ -80,6 +96,7 @@ exports.register = async (req, res) => {
         email,
         password: hashedPassword,
         role: role || "user",
+        department,
         otp,
         otpExpires,
         isVerified: false,
@@ -324,6 +341,7 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        department: user.department,
       },
       token: token,
     });

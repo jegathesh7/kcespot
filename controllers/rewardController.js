@@ -7,6 +7,7 @@ const AchievementSubmission = require("../models/AchievementSubmission");
 const Staff = require("../models/Staff");
 const Achiever = require("../models/Achiever");
 const mongoose = require("mongoose");
+const { ACHIEVEMENT_CATEGORIES } = require("../config/constants");
 
 // Helper: Badge Evaluation
 const evaluateBadges = async (userId) => {
@@ -452,13 +453,25 @@ exports.getSubmissions = async (req, res) => {
     const count = await AchievementSubmission.countDocuments(filter);
     const submissions = await AchievementSubmission.find(filter)
       .populate("studentId", "name rollNo department collegeName email")
+      .populate("verifiedBy", "name email role")
       .sort("-createdAt")
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
+    // Filter and map to specific response format
+    const formattedSubmissions = submissions.map((sub) => ({
+      submissionId: sub._id,
+      name: sub.studentId?.name || "N/A",
+      rollNo: sub.studentId?.rollNo || "N/A",
+      dept: sub.department || sub.studentId?.department || "N/A",
+      category: sub.category,
+      status: sub.status,
+      title: sub.title,
+    }));
+
     res.json({
       success: true,
-      data: submissions,
+      data: formattedSubmissions,
       totalPages: Math.ceil(count / limit),
       currentPage: Number(page),
       totalItems: count,
@@ -546,6 +559,45 @@ exports.getStudentAchievements = async (req, res) => {
       totalPages: Math.ceil(count / limit),
       currentPage: Number(page),
       totalItems: count,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get Single Submission Details (Staff/Admin Only)
+// @route   GET /api/rewards/submission/:id
+exports.getSubmissionDetails = async (req, res) => {
+  try {
+    const submission = await AchievementSubmission.findById(req.params.id)
+      .populate(
+        "studentId",
+        "name rollNo department collegeName email year batch",
+      )
+      .populate("verifiedBy", "name email role");
+
+    if (!submission) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Submission not found" });
+    }
+
+    res.json({
+      success: true,
+      data: submission,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get Achievement Categories
+// @route   GET /api/rewards/categories
+exports.getCategories = async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: ACHIEVEMENT_CATEGORIES,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
