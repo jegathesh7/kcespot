@@ -14,6 +14,8 @@ const {
   getSubmissionDetails,
   getStudentAchievements,
   getCategories,
+  updateAchievement,
+  deleteAchievement,
 } = require("../controllers/rewardController");
 const {
   protect,
@@ -37,6 +39,14 @@ router.get("/my-submissions", protect, getStudentAchievements);
 router.post("/redeem", protect, redeemReward);
 router.get("/badges", protect, getAllBadges);
 router.get("/categories", protect, getCategories);
+
+router.put(
+  "/submission/:id",
+  protect,
+  upload.single("evidenceImage"),
+  updateAchievement,
+);
+router.delete("/submission/:id", protect, deleteAchievement);
 
 // History Routes (Paginated)
 router.get(
