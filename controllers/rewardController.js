@@ -603,3 +603,116 @@ exports.getCategories = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+// @desc    Update Achievement
+// @route   PUT /api/rewards/submission/:id
+exports.updateAchievement = async (req, res) => {
+  try {
+    const { title, category, description, evidenceUrl } = req.body;
+    const submission = await AchievementSubmission.findById(req.params.id);
+
+    if (!submission) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Submission not found" });
+    }
+
+    // Check ownership
+    if (submission.studentId.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Not authorized to edit this achievement",
+        });
+    }
+
+    // Check status
+    if (!["pending", "rejected", "resubmit"].includes(submission.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot edit achievement with status: ${submission.status}`,
+      });
+    }
+
+    const evidenceImage = req.file ? req.file.path : submission.evidenceImage;
+
+    // Generate new evidenceHash if title or evidence changes
+    let evidenceHash = submission.evidenceHash;
+    if (
+      title !== submission.title ||
+      evidenceUrl !== submission.evidenceUrl ||
+      (req.file && req.file.path !== submission.evidenceImage)
+    ) {
+      const evidenceSource = evidenceImage || evidenceUrl || "";
+      evidenceHash = crypto
+        .createHash("sha256")
+        .update(`${title || submission.title}-${evidenceSource}`)
+        .digest("hex");
+
+      // Check for duplicate if hash changed
+      if (evidenceHash !== submission.evidenceHash) {
+        const existing = await AchievementSubmission.findOne({ evidenceHash });
+        if (existing && existing._id.toString() !== submission._id.toString()) {
+          return res.status(400).json({
+            success: false,
+            message: "This achievement has already been submitted.",
+          });
+        }
+      }
+    }
+
+    submission.title = title || submission.title;
+    submission.category = category || submission.category;
+    submission.description = description || submission.description;
+    submission.evidenceUrl = evidenceUrl || submission.evidenceUrl;
+    submission.evidenceImage = evidenceImage;
+    submission.evidenceHash = evidenceHash;
+
+    // If it was rejected, moving it back to pending
+    if (submission.status === "rejected" || submission.status === "resubmit") {
+      submission.status = "pending";
+    }
+
+    await submission.save();
+    res.json({ success: true, data: submission });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete Achievement
+// @route   DELETE /api/rewards/submission/:id
+exports.deleteAchievement = async (req, res) => {
+  try {
+    const submission = await AchievementSubmission.findById(req.params.id);
+
+    if (!submission) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Submission not found" });
+    }
+
+    // Check ownership
+    if (submission.studentId.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Not authorized to delete this achievement",
+        });
+    }
+
+    // Check status - only pending achievements can be deleted
+    if (submission.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Only pending achievements can be deleted",
+      });
+    }
+
+    await AchievementSubmission.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Achievement deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
