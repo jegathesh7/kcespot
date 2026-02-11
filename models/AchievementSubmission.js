@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { ACHIEVEMENT_CATEGORIES } = require("../config/constants");
 
 const achievementSubmissionSchema = new mongoose.Schema(
   {
@@ -8,7 +9,7 @@ const achievementSubmissionSchema = new mongoose.Schema(
       required: true,
     },
     title: { type: String, required: true },
-    category: { type: String, required: true },
+    category: { type: String, required: true, enum: ACHIEVEMENT_CATEGORIES },
     description: { type: String },
     evidenceUrl: { type: String }, // External link (optional)
     evidenceImage: { type: String }, // Uploaded file path

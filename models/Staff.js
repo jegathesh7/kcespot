@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { ACHIEVEMENT_CATEGORIES } = require("../config/constants");
 
 const staffSchema = new mongoose.Schema(
   {
@@ -18,7 +19,7 @@ const staffSchema = new mongoose.Schema(
     },
     collegeName: { type: String, enum: ["KCE", "KIT", "KAHE"], required: true },
     department: { type: String, required: true },
-    assignedCategory: { type: String }, // For filtering submissions
+    assignedCategory: { type: String, enum: ACHIEVEMENT_CATEGORIES }, // For filtering submissions
     // status: { type: Boolean, default: true },
   },
   { timestamps: true },
