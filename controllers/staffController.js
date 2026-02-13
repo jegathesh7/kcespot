@@ -105,3 +105,47 @@ exports.loginStaff = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Update Staff member (Admin Only)
+// @route   PATCH /api/staff/:id
+exports.updateStaff = async (req, res) => {
+  try {
+    const { password, ...updateData } = req.body;
+
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    const staff = await Staff.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },
+      { new: true, runValidators: true },
+    ).select("-password");
+
+    if (!staff) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Staff not found" });
+    }
+
+    res.json({ success: true, data: staff });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete Staff member (Admin Only)
+// @route   DELETE /api/staff/:id
+exports.deleteStaff = async (req, res) => {
+  try {
+    const staff = await Staff.findByIdAndDelete(req.params.id);
+    if (!staff) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Staff not found" });
+    }
+    res.json({ success: true, message: "Staff member deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
