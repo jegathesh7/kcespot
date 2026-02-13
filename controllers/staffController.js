@@ -42,7 +42,7 @@ exports.getAllStaff = async (req, res) => {
       status,
     } = req.query;
 
-    const query = {};
+    const query = { _id: { $ne: req.user.id } };
 
     if (search) {
       query.$or = [
