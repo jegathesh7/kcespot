@@ -8,6 +8,7 @@ const Staff = require("../models/Staff");
 const PointRule = require("../models/PointRule");
 const ExcelJS = require("exceljs");
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 const { ACHIEVEMENT_CATEGORIES } = require("../config/constants");
 
 // Helper: Badge Evaluation
@@ -57,9 +58,6 @@ const awardPoints = async (
 
   await evaluateBadges(userId);
 };
-
-const crypto = require("crypto");
-const PointRule = require("../models/PointRule");
 
 // @desc    Submit Achievement
 // @route   POST /api/rewards/submit
