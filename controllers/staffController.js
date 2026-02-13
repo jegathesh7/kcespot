@@ -42,7 +42,7 @@ exports.getAllStaff = async (req, res) => {
       status,
     } = req.query;
 
-    const query = { _id: { $ne: req.user.id } };
+    const query = { _id: { $ne: req.user.id }, isDeleted: { $ne: true } };
 
     if (search) {
       query.$or = [
@@ -138,7 +138,11 @@ exports.updateStaff = async (req, res) => {
 // @route   DELETE /api/staff/:id
 exports.deleteStaff = async (req, res) => {
   try {
-    const staff = await Staff.findByIdAndDelete(req.params.id);
+    const staff = await Staff.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true },
+      { new: true },
+    );
     if (!staff) {
       return res
         .status(404)

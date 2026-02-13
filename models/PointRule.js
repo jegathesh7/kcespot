@@ -10,6 +10,7 @@ const pointRuleSchema = new mongoose.Schema(
       enum: ACHIEVEMENT_CATEGORIES,
     },
     points: { type: Number, required: true },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
