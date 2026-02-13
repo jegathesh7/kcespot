@@ -374,6 +374,47 @@ exports.getPointRules = async (req, res) => {
   }
 };
 
+// @desc    Delete Point Rule (Admin Only)
+// @route   DELETE /api/rewards/rules/:id
+exports.deletePointRule = async (req, res) => {
+  try {
+    const rule = await PointRule.findById(req.params.id);
+    if (!rule) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Rule not found" });
+    }
+
+    await PointRule.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Point rule deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update Point Rule (Admin Only)
+// @route   PATCH /api/rewards/rules/:id
+exports.updatePointRule = async (req, res) => {
+  try {
+    const { points, category } = req.body;
+    const rule = await PointRule.findByIdAndUpdate(
+      req.params.id,
+      { points, category },
+      { new: true, runValidators: true },
+    );
+
+    if (!rule) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Rule not found" });
+    }
+
+    res.json({ success: true, data: rule });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Get All Badge Tiers
 // @route   GET /api/rewards/badges
 exports.getAllBadges = async (req, res) => {
