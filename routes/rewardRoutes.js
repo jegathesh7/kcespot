@@ -86,8 +86,8 @@ router.patch(
   updateRedemptionStatus,
 );
 
-router.post("/rules", protect,adminOnly ,upsertPointRule);
-router.get("/rules", protect, getPointRules);
+router.post("/rules", protect, adminOnly, upsertPointRule);
+router.get("/rules", getPointRules);
 router.delete("/rules/:id", protect, adminOnly, deletePointRule);
 router.patch("/rules/:id", protect, adminOnly, updatePointRule);
 
