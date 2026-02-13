@@ -6,6 +6,8 @@ const studentSchema = new mongoose.Schema({
   year: String,
   dept: String,
   imageUrl: String,
+  rollNo: String,
+  email: String,
 });
 
 const achieverSchema = new mongoose.Schema(
@@ -27,6 +29,10 @@ const achieverSchema = new mongoose.Schema(
       r5: { type: Number, default: 0 },
     },
     isDeleted: { type: Boolean, default: false },
+    submissionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AchievementSubmission",
+    },
   },
   { timestamps: true },
 );

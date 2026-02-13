@@ -173,6 +173,7 @@ exports.verifyAchievement = async (req, res) => {
             dept: student.department || student.dept,
           },
         ],
+        submissionId: submission._id,
       });
     } else if (status === "rejected") {
       submission.rejectionReason = rejectionReason;
@@ -433,11 +434,12 @@ exports.getSubmissions = async (req, res) => {
 
     // 4. Advanced Search (Achievement Details OR Student Details)
     if (search) {
-      // Find students matching name or rollNo
+      // Find students matching name, rollNo, or email
       const matchingStudents = await User.find({
         $or: [
           { name: { $regex: search, $options: "i" } },
           { rollNo: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
         ],
       }).select("_id");
 
@@ -463,6 +465,7 @@ exports.getSubmissions = async (req, res) => {
       submissionId: sub._id,
       name: sub.studentId?.name || "N/A",
       rollNo: sub.studentId?.rollNo || "N/A",
+      email: sub.studentId?.email || "N/A",
       dept: sub.department || sub.studentId?.department || "N/A",
       category: sub.category,
       status: sub.status,
@@ -618,12 +621,10 @@ exports.updateAchievement = async (req, res) => {
 
     // Check ownership
     if (submission.studentId.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Not authorized to edit this achievement",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to edit this achievement",
+      });
     }
 
     // Check status
@@ -694,12 +695,10 @@ exports.deleteAchievement = async (req, res) => {
 
     // Check ownership
     if (submission.studentId.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Not authorized to delete this achievement",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete this achievement",
+      });
     }
 
     // Check status - only pending achievements can be deleted
