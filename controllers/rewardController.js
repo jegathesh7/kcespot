@@ -157,13 +157,13 @@ exports.verifyAchievement = async (req, res) => {
       // Auto-post to Achiever collection
       const student = await User.findById(submission.studentId);
       await Achiever.create({
-        name: student.name,
-        college: student.collegeName,
-        batch: student.batch,
+        name: submission.title,
+        college: submission.collegeName,
+        batch: student.batch ? student.batch.split("-").pop() : "N/A",
         category: submission.category,
         description: submission.description,
         status: true,
-        posterImage: submission.evidenceImage || submission.evidenceUrl,
+        posterImage: submission.evidenceImage,
         students: [
           {
             name: student.name,
