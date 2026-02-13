@@ -21,6 +21,11 @@ const {
   updateRewardItem,
   deleteRewardItem,
   getAllRedemptions,
+  updateRedemptionStatus,
+  exportSubmissionsToExcel,
+  exportPointRulesToExcel,
+  exportCatalogToExcel,
+  exportRedemptionsToExcel,
 } = require("../controllers/rewardController");
 const {
   protect,
@@ -74,10 +79,22 @@ router.post("/catalog", protect, adminOnly, addRewardItem);
 router.patch("/catalog/:id", protect, adminOnly, updateRewardItem);
 router.delete("/catalog/:id", protect, adminOnly, deleteRewardItem);
 router.get("/admin/redemptions", protect, staffOnly, getAllRedemptions);
+router.patch(
+  "/admin/redemptions/:id",
+  protect,
+  staffOnly,
+  updateRedemptionStatus,
+);
 
 router.post("/rules", protect, adminOnly, upsertPointRule);
 router.get("/rules", protect, staffOnly, getPointRules);
 router.delete("/rules/:id", protect, adminOnly, deletePointRule);
 router.patch("/rules/:id", protect, adminOnly, updatePointRule);
+
+// Export Routes
+router.get("/export/submissions", protect, staffOnly, exportSubmissionsToExcel);
+router.get("/export/rules", protect, adminOnly, exportPointRulesToExcel);
+router.get("/export/catalog", protect, adminOnly, exportCatalogToExcel);
+router.get("/export/redemptions", protect, staffOnly, exportRedemptionsToExcel);
 
 module.exports = router;
