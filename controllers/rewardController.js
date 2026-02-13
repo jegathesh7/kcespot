@@ -317,6 +317,12 @@ exports.addRewardItem = async (req, res) => {
       expiryDate,
       imageUrl,
     } = req.body;
+
+    let finalImageUrl = imageUrl;
+    if (req.file) {
+      finalImageUrl = req.file.path;
+    }
+
     const reward = await RewardCatalog.create({
       name,
       description,
@@ -324,7 +330,7 @@ exports.addRewardItem = async (req, res) => {
       stock,
       category,
       expiryDate,
-      imageUrl,
+      imageUrl: finalImageUrl,
     });
     res.status(201).json({ success: true, data: reward });
   } catch (error) {
@@ -336,9 +342,14 @@ exports.addRewardItem = async (req, res) => {
 // @route   PATCH /api/rewards/catalog/:id
 exports.updateRewardItem = async (req, res) => {
   try {
+    const updates = { ...req.body };
+    if (req.file) {
+      updates.imageUrl = req.file.path;
+    }
+
     const reward = await RewardCatalog.findByIdAndUpdate(
       req.params.id,
-      { $set: req.body },
+      { $set: updates },
       { new: true, runValidators: true },
     );
     if (!reward) {
@@ -595,9 +606,18 @@ exports.getPointHistory = async (req, res) => {
 // @route   GET /api/rewards/history/redemptions
 exports.getRedemptionHistory = async (req, res) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
+    const { page = 1, limit = 10, status, search = "" } = req.query;
     const query = { studentId: req.user.id };
     if (status) query.status = status;
+
+    // If search is provided, find matching reward IDs first
+    if (search) {
+      const rewards = await RewardCatalog.find({
+        name: { $regex: search, $options: "i" },
+      }).select("_id");
+      const rewardIds = rewards.map((r) => r._id);
+      query.rewardId = { $in: rewardIds };
+    }
 
     const count = await Redemption.countDocuments(query);
     const history = await Redemption.find(query)
@@ -607,6 +627,7 @@ exports.getRedemptionHistory = async (req, res) => {
       .skip((page - 1) * limit);
 
     res.json({
+      success: true,
       data: history,
       totalPages: Math.ceil(count / limit),
       currentPage: Number(page),

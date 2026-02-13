@@ -71,14 +71,38 @@ router.get(
 );
 
 // Staff/Admin Routes
-router.get("/submissions", protect, staffOnly,adminOnly, getSubmissions);
-router.patch("/verify/:id", protect, staffOnly,adminOnly, verifyAchievement);
-router.get("/submission/:id", protect, staffOnly,adminOnly, getSubmissionDetails);
+router.get("/submissions", protect, staffOnly, adminOnly, getSubmissions);
+router.patch("/verify/:id", protect, staffOnly, adminOnly, verifyAchievement);
+router.get(
+  "/submission/:id",
+  protect,
+  staffOnly,
+  adminOnly,
+  getSubmissionDetails,
+);
 
-router.post("/catalog", protect, adminOnly, addRewardItem);
-router.patch("/catalog/:id", protect, adminOnly, updateRewardItem);
+router.post(
+  "/catalog",
+  protect,
+  adminOnly,
+  upload.single("image"),
+  addRewardItem,
+);
+router.patch(
+  "/catalog/:id",
+  protect,
+  adminOnly,
+  upload.single("image"),
+  updateRewardItem,
+);
 router.delete("/catalog/:id", protect, adminOnly, deleteRewardItem);
-router.get("/admin/redemptions", protect, staffOnly,adminOnly, getAllRedemptions);
+router.get(
+  "/admin/redemptions",
+  protect,
+  staffOnly,
+  adminOnly,
+  getAllRedemptions,
+);
 router.patch(
   "/admin/redemptions/:id",
   protect,
@@ -92,9 +116,21 @@ router.delete("/rules/:id", protect, adminOnly, deletePointRule);
 router.patch("/rules/:id", protect, adminOnly, updatePointRule);
 
 // Export Routes
-router.get("/export/submissions", protect, staffOnly,adminOnly, exportSubmissionsToExcel);
+router.get(
+  "/export/submissions",
+  protect,
+  staffOnly,
+  adminOnly,
+  exportSubmissionsToExcel,
+);
 router.get("/export/rules", protect, adminOnly, exportPointRulesToExcel);
 router.get("/export/catalog", protect, adminOnly, exportCatalogToExcel);
-router.get("/export/redemptions", protect, staffOnly,adminOnly, exportRedemptionsToExcel);
+router.get(
+  "/export/redemptions",
+  protect,
+  staffOnly,
+  adminOnly,
+  exportRedemptionsToExcel,
+);
 
 module.exports = router;
