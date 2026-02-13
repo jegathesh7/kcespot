@@ -5,8 +5,10 @@ const RewardPointsLedger = require("../models/RewardPointsLedger");
 const Badge = require("../models/Badge");
 const AchievementSubmission = require("../models/AchievementSubmission");
 const Staff = require("../models/Staff");
-const Achiever = require("../models/Achiever");
+const PointRule = require("../models/PointRule");
+const ExcelJS = require("exceljs");
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 const { ACHIEVEMENT_CATEGORIES } = require("../config/constants");
 
 // Helper: Badge Evaluation
@@ -56,9 +58,6 @@ const awardPoints = async (
 
   await evaluateBadges(userId);
 };
-
-const crypto = require("crypto");
-const PointRule = require("../models/PointRule");
 
 // @desc    Submit Achievement
 // @route   POST /api/rewards/submit
@@ -854,6 +853,203 @@ exports.getAllRedemptions = async (req, res) => {
       currentPage: Number(page),
       totalItems: count,
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update Redemption Status (Staff/Admin Only)
+// @route   PATCH /api/rewards/admin/redemptions/:id
+exports.updateRedemptionStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const redemption = await Redemption.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: true },
+    );
+
+    if (!redemption) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Redemption not found" });
+    }
+
+    res.json({ success: true, data: redemption });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Export Achievement Submissions to Excel
+// @route   GET /api/rewards/export/submissions
+exports.exportSubmissionsToExcel = async (req, res) => {
+  try {
+    const submissions = await AchievementSubmission.find({
+      isDeleted: { $ne: true },
+    }).populate("studentId", "name rollNo department collegeName email batch");
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Submissions");
+
+    worksheet.columns = [
+      { header: "Student Name", key: "studentName", width: 25 },
+      { header: "Roll No", key: "rollNo", width: 15 },
+      { header: "College", key: "college", width: 10 },
+      { header: "Department", key: "department", width: 15 },
+      { header: "Title", key: "title", width: 30 },
+      { header: "Category", key: "category", width: 25 },
+      { header: "Status", key: "status", width: 15 },
+      { header: "Points Awarded", key: "points", width: 15 },
+      { header: "Submitted At", key: "createdAt", width: 20 },
+    ];
+
+    submissions.forEach((sub) => {
+      worksheet.addRow({
+        studentName: sub.studentId?.name || "N/A",
+        rollNo: sub.studentId?.rollNo || "N/A",
+        college: sub.studentId?.collegeName || "N/A",
+        department: sub.studentId?.department || "N/A",
+        title: sub.title,
+        category: sub.category,
+        status: sub.status,
+        points: sub.pointsAwarded,
+        createdAt: sub.createdAt.toLocaleString(),
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=submissions.xlsx",
+    );
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Export Point Rules to Excel
+// @route   GET /api/rewards/export/rules
+exports.exportPointRulesToExcel = async (req, res) => {
+  try {
+    const rules = await PointRule.find({ isDeleted: { $ne: true } });
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Point Rules");
+
+    worksheet.columns = [
+      { header: "Category", key: "category", width: 30 },
+      { header: "Points", key: "points", width: 15 },
+    ];
+
+    rules.forEach((rule) => {
+      worksheet.addRow({ category: rule.category, points: rule.points });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=point_rules.xlsx",
+    );
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Export Reward Catalog to Excel
+// @route   GET /api/rewards/export/catalog
+exports.exportCatalogToExcel = async (req, res) => {
+  try {
+    const catalog = await RewardCatalog.find({ isDeleted: { $ne: true } });
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Reward Catalog");
+
+    worksheet.columns = [
+      { header: "Name", key: "name", width: 25 },
+      { header: "Category", key: "category", width: 20 },
+      { header: "Points Cost", key: "pointsCost", width: 15 },
+      { header: "Stock", key: "stock", width: 10 },
+      { header: "Description", key: "description", width: 40 },
+    ];
+
+    catalog.forEach((item) => {
+      worksheet.addRow({
+        name: item.name,
+        category: item.category,
+        pointsCost: item.pointsCost,
+        stock: item.stock,
+        description: item.description,
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader("Content-Disposition", "attachment; filename=catalog.xlsx");
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Export Redemptions to Excel
+// @route   GET /api/rewards/export/redemptions
+exports.exportRedemptionsToExcel = async (req, res) => {
+  try {
+    const redemptions = await Redemption.find()
+      .populate("studentId", "name rollNo department collegeName email batch")
+      .populate("rewardId", "name pointsCost category");
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Redemptions");
+
+    worksheet.columns = [
+      { header: "Student Name", key: "studentName", width: 25 },
+      { header: "Roll No", key: "rollNo", width: 15 },
+      { header: "Department", key: "department", width: 15 },
+      { header: "Reward Name", key: "reward", width: 25 },
+      { header: "Points Cost", key: "points", width: 15 },
+      { header: "Status", key: "status", width: 15 },
+      { header: "Redeemed At", key: "date", width: 20 },
+    ];
+
+    redemptions.forEach((red) => {
+      worksheet.addRow({
+        studentName: red.studentId?.name || "N/A",
+        rollNo: red.studentId?.rollNo || "N/A",
+        department: red.studentId?.department || "N/A",
+        reward: red.rewardId?.name || "N/A",
+        points: red.rewardId?.pointsCost || 0,
+        status: red.status,
+        date: red.redeemedAt.toLocaleString(),
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=redemptions.xlsx",
+    );
+    await workbook.xlsx.write(res);
+    res.end();
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

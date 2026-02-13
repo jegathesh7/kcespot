@@ -1,6 +1,7 @@
 const Staff = require("../models/Staff");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const ExcelJS = require("exceljs");
 
 // @desc    Add Staff member
 // @route   POST /api/staff
@@ -149,6 +150,57 @@ exports.deleteStaff = async (req, res) => {
         .json({ success: false, message: "Staff not found" });
     }
     res.json({ success: true, message: "Staff member deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Export Staff to Excel
+// @route   GET /api/staff/export
+exports.exportStaffToExcel = async (req, res) => {
+  try {
+    const staffMembers = await Staff.find({ isDeleted: { $ne: true } }).select(
+      "-password",
+    );
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Staff Members");
+
+    worksheet.columns = [
+      { header: "Name", key: "name", width: 20 },
+      { header: "Email", key: "email", width: 30 },
+      { header: "Role", key: "role", width: 15 },
+      { header: "College", key: "collegeName", width: 10 },
+      { header: "Department", key: "department", width: 20 },
+      { header: "Assigned Category", key: "assignedCategory", width: 25 },
+      { header: "Created At", key: "createdAt", width: 20 },
+    ];
+
+    staffMembers.forEach((staff) => {
+      worksheet.addRow({
+        name: staff.name,
+        email: staff.email,
+        role: staff.role,
+        collegeName: staff.collegeName,
+        department: staff.department,
+        assignedCategory: staff.assignedCategory || "N/A",
+        createdAt: staff.createdAt.toLocaleString(),
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=" + "staff_members.xlsx",
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
