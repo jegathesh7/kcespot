@@ -41,25 +41,45 @@ exports.createAchiever = async (req, res) => {
     // --- Reward System Integration: Admin Success Post ---
     // If Admin posts, award points automatically to found students
     const { awardPoints } = require("./rewardController");
+    const PointRule = require("../models/PointRule");
+
     if (savedAchiever.students && savedAchiever.students.length > 0) {
       for (const s of savedAchiever.students) {
         if (s.rollNo) {
-          const user = await User.findOne({ rollNo: s.rollNo });
-          if (user) {
-            // Find rule for this category
-            const PointRule = require("../models/PointRule");
-            const rule = await PointRule.findOne({
-              category: savedAchiever.category,
-            });
-            const points = rule ? rule.points : 100; // Fallback to 100 for admin posts if no rule
+          // 1. Case-Insensitive Matching
+          const user = await User.findOne({
+            rollNo: { $regex: `^${s.rollNo}$`, $options: "i" },
+          });
 
-            await awardPoints(
-              user._id,
-              points,
-              `Admin Achievement Post: ${savedAchiever.category}`,
-              savedAchiever._id,
-              "Achiever",
-            );
+          if (user) {
+            // 2. Duplication Prevention: Check if points were already awarded for a similar achievement
+            // We check the Ledger for a credit to this student with same reason/reference
+            const RewardPointsLedger = require("../models/RewardPointsLedger");
+            const alreadyAwarded = await RewardPointsLedger.findOne({
+              studentId: user._id,
+              referenceId: savedAchiever._id,
+              referenceModel: "Achiever",
+            });
+
+            if (!alreadyAwarded) {
+              // Find rule for this category
+              const rule = await PointRule.findOne({
+                category: savedAchiever.category,
+              });
+              const points = rule ? rule.points : 100; // Fallback to 100 for admin posts if no rule
+
+              await awardPoints(
+                user._id,
+                points,
+                `Admin Achievement Post: ${savedAchiever.category}`,
+                savedAchiever._id,
+                "Achiever",
+              );
+            } else {
+              console.log(
+                `Points already awarded for student ${s.rollNo} on achiever ${savedAchiever._id}`,
+              );
+            }
           }
         }
       }
