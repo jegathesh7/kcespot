@@ -6,6 +6,7 @@ const Badge = require("../models/Badge");
 const AchievementSubmission = require("../models/AchievementSubmission");
 const Staff = require("../models/Staff");
 const PointRule = require("../models/PointRule");
+const Achiever = require("../models/Achiever");
 const ExcelJS = require("exceljs");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
