@@ -9,6 +9,8 @@ const {
   addRewardItem,
   upsertPointRule,
   getPointRules,
+  deletePointRule,
+  updatePointRule,
   getAllBadges,
   getSubmissions,
   getSubmissionDetails,
@@ -68,5 +70,7 @@ router.get("/submission/:id", protect, staffOnly, getSubmissionDetails);
 router.post("/catalog", protect, adminOnly, addRewardItem);
 router.post("/rules", protect, adminOnly, upsertPointRule);
 router.get("/rules", protect, staffOnly, getPointRules);
+router.delete("/rules/:id", protect, adminOnly, deletePointRule);
+router.patch("/rules/:id", protect, adminOnly, updatePointRule);
 
 module.exports = router;
