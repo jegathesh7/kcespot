@@ -20,6 +20,7 @@ const {
   deleteAchievement,
   updateRewardItem,
   deleteRewardItem,
+  getAllRedemptions,
 } = require("../controllers/rewardController");
 const {
   protect,
@@ -72,6 +73,7 @@ router.get("/submission/:id", protect, staffOnly, getSubmissionDetails);
 router.post("/catalog", protect, adminOnly, addRewardItem);
 router.patch("/catalog/:id", protect, adminOnly, updateRewardItem);
 router.delete("/catalog/:id", protect, adminOnly, deleteRewardItem);
+router.get("/admin/redemptions", protect, staffOnly, getAllRedemptions);
 
 router.post("/rules", protect, adminOnly, upsertPointRule);
 router.get("/rules", protect, staffOnly, getPointRules);

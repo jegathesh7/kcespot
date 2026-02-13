@@ -798,3 +798,63 @@ exports.deleteAchievement = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Get All Redemptions (Staff/Admin Only)
+// @route   GET /api/rewards/admin/redemptions
+exports.getAllRedemptions = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      collegeName,
+      department,
+      batch,
+      search = "",
+    } = req.query;
+
+    const filter = {};
+
+    if (status) filter.status = status;
+
+    // Student identity filters
+    const studentQuery = {};
+    if (collegeName) studentQuery.collegeName = collegeName;
+    if (department) studentQuery.department = department; // Note: model uses 'department'
+    if (batch) studentQuery.batch = batch;
+
+    if (search) {
+      studentQuery.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { rollNo: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Find matching students first to filter redemptions
+    let studentIds = [];
+    if (Object.keys(studentQuery).length > 0) {
+      const matchingStudents = await User.find(studentQuery).select("_id");
+      studentIds = matchingStudents.map((s) => s._id);
+      filter.studentId = { $in: studentIds };
+    }
+
+    const count = await Redemption.countDocuments(filter);
+    const redemptions = await Redemption.find(filter)
+      .populate("studentId", "name rollNo department collegeName email batch")
+      .populate("rewardId", "name pointsCost category imageUrl")
+      .sort("-redeemedAt")
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    res.json({
+      success: true,
+      data: redemptions,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+      totalItems: count,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
