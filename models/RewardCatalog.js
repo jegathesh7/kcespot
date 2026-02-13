@@ -13,6 +13,7 @@ const rewardCatalogSchema = new mongoose.Schema(
     },
     expiryDate: { type: Date },
     imageUrl: { type: String },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

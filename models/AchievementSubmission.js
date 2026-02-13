@@ -25,6 +25,7 @@ const achievementSubmissionSchema = new mongoose.Schema(
     pointsAwarded: { type: Number, default: 0 },
     verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Staff" },
     rejectionReason: { type: String },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

@@ -279,7 +279,7 @@ exports.getCatalog = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", category } = req.query;
 
-    const query = { stock: { $gt: 0 } };
+    const query = { stock: { $gt: 0 }, isDeleted: { $ne: true } };
 
     if (search) {
       query.name = { $regex: search, $options: "i" };
@@ -332,6 +332,46 @@ exports.addRewardItem = async (req, res) => {
   }
 };
 
+// @desc    Update Reward Item (Admin Only)
+// @route   PATCH /api/rewards/catalog/:id
+exports.updateRewardItem = async (req, res) => {
+  try {
+    const reward = await RewardCatalog.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true },
+    );
+    if (!reward) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Reward not found" });
+    }
+    res.json({ success: true, data: reward });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete Reward Item (Soft Delete) (Admin Only)
+// @route   DELETE /api/rewards/catalog/:id
+exports.deleteRewardItem = async (req, res) => {
+  try {
+    const reward = await RewardCatalog.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true },
+      { new: true },
+    );
+    if (!reward) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Reward not found" });
+    }
+    res.json({ success: true, message: "Reward deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Add/Update Point Rule (Admin Only)
 // @route   POST /api/rewards/rules
 exports.upsertPointRule = async (req, res) => {
@@ -353,7 +393,7 @@ exports.upsertPointRule = async (req, res) => {
 exports.getPointRules = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "" } = req.query;
-    const query = {};
+    const query = { isDeleted: { $ne: true } };
     if (search) {
       query.category = { $regex: search, $options: "i" };
     }
@@ -385,7 +425,7 @@ exports.deletePointRule = async (req, res) => {
         .json({ success: false, message: "Rule not found" });
     }
 
-    await PointRule.findByIdAndDelete(req.params.id);
+    await PointRule.findByIdAndUpdate(req.params.id, { isDeleted: true });
     res.json({ success: true, message: "Point rule deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -452,7 +492,7 @@ exports.getSubmissions = async (req, res) => {
       search = "",
     } = req.query;
 
-    const filter = {};
+    const filter = { isDeleted: { $ne: true } };
 
     // 1. Status Filter
     if (status && status !== "all") {
@@ -581,7 +621,7 @@ exports.getRedemptionHistory = async (req, res) => {
 exports.getStudentAchievements = async (req, res) => {
   try {
     const { page = 1, limit = 10, status, search = "" } = req.query;
-    const query = { studentId: req.user.id };
+    const query = { studentId: req.user.id, isDeleted: { $ne: true } };
 
     if (status) query.status = status;
     if (search) {
@@ -750,7 +790,9 @@ exports.deleteAchievement = async (req, res) => {
       });
     }
 
-    await AchievementSubmission.findByIdAndDelete(req.params.id);
+    await AchievementSubmission.findByIdAndUpdate(req.params.id, {
+      isDeleted: true,
+    });
     res.json({ success: true, message: "Achievement deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -20,7 +20,7 @@ const staffSchema = new mongoose.Schema(
     collegeName: { type: String, enum: ["KCE", "KIT", "KAHE"], required: true },
     department: { type: String, required: true },
     assignedCategory: { type: String, enum: ACHIEVEMENT_CATEGORIES }, // For filtering submissions
-    // status: { type: Boolean, default: true },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
