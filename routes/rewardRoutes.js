@@ -31,6 +31,7 @@ const {
   protect,
   adminOnly,
   staffOnly,
+  userOnly,
 } = require("../middleware/authMiddleware");
 
 const upload = require("../middleware/upload");
