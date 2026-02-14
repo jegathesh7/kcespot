@@ -57,7 +57,7 @@ router.put(
   upload.single("evidenceImage"),
   updateAchievement,
 );
-router.delete("/submission/:id", protect, adminOnly,staffOnly,userOnly, deleteAchievement);
+router.delete("/submission/:id", protect, deleteAchievement);
 
 // History Routes (Paginated)
 router.get(
