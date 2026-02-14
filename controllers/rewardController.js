@@ -817,12 +817,12 @@ exports.deleteAchievement = async (req, res) => {
     // }
 
     // Check status - only pending achievements can be deleted
-    if (submission.status !== "pending") {
-      return res.status(400).json({
-        success: false,
-        message: "Only pending achievements can be deleted",
-      });
-    }
+    // if (submission.status !== "pending") {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Only pending achievements can be deleted",
+    //   });
+    // }
 
     await AchievementSubmission.findByIdAndUpdate(req.params.id, {
       isDeleted: true,
