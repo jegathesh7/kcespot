@@ -796,12 +796,12 @@ exports.deleteAchievement = async (req, res) => {
     }
 
     // Check ownership
-    if (submission.studentId.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to delete this achievement",
-      });
-    }
+    // if (submission.studentId.toString() !== req.user.id) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Not authorized to delete this achievement",
+    //   });
+    // }
 
     // Check status - only pending achievements can be deleted
     if (submission.status !== "pending") {
