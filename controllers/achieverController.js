@@ -179,7 +179,7 @@ exports.getAdminAchivers = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", college = "" } = req.query;
 
-    const query = { isDeleted: false };
+    const query = { isDeleted: false, submissionId: null };
 
     if (search) {
       query.$or = [

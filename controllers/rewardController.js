@@ -11,6 +11,9 @@ const ExcelJS = require("exceljs");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const { ACHIEVEMENT_CATEGORIES } = require("../config/constants");
+const {
+  sendSubmissionStatusNotification,
+} = require("../service/pushNotificationService");
 
 // Helper: Badge Evaluation
 const evaluateBadges = async (userId) => {
@@ -164,6 +167,7 @@ exports.verifyAchievement = async (req, res) => {
         description: submission.description,
         status: true,
         posterImage: submission.evidenceImage,
+
         students: [
           {
             name: student.name,
@@ -175,6 +179,15 @@ exports.verifyAchievement = async (req, res) => {
         ],
         submissionId: submission._id,
       });
+
+      // Notify the student
+      if (student.pushTokens && student.pushTokens.length > 0) {
+        sendSubmissionStatusNotification(
+          student.pushTokens,
+          submission,
+          "approved",
+        );
+      }
     } else if (status === "rejected") {
       submission.rejectionReason = rejectionReason;
     }

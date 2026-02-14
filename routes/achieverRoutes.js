@@ -14,7 +14,7 @@ const { protect, adminOnly } = require("../middleware/authMiddleware");
 
 router.post("/", protect, adminOnly, upload.any(), createAchiever);
 router.get("/", protect, getAchievers);
-router.get("/admin",protect,getAdminAchivers);
+router.get("/admin",protect,adminOnly,getAdminAchivers);
 router.put("/:id", protect, adminOnly, upload.any(), updateAchiever);
 router.delete("/:id", protect, adminOnly, deleteAchiever);
 router.patch("/reaction/:id", protect, updateReaction);

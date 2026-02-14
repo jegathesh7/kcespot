@@ -164,3 +164,80 @@ exports.sendAchieverNotification = async (pushTokens, achiever) => {
     }
   }
 };
+
+exports.sendSubmissionStatusNotification = async (
+  pushTokens,
+  submission,
+  status,
+) => {
+  const expoTokens = [];
+  const fcmTokens = [];
+
+  if (!pushTokens || pushTokens.length === 0) return;
+
+  for (const token of pushTokens) {
+    if (Expo.isExpoPushToken(token)) {
+      expoTokens.push(token);
+    } else {
+      fcmTokens.push(token);
+    }
+  }
+
+  const isApproved = status === "approved";
+  const title = isApproved
+    ? "Achievement Approved! 🎉"
+    : "Update on your Achievement";
+  const body = isApproved
+    ? `Your submission "${submission.title}" has been approved and points have been awarded.`
+    : `Your submission "${submission.title}" has been updated to ${status}.`;
+
+  // --- Send Expo Notifications ---
+  if (expoTokens.length > 0) {
+    const messages = expoTokens.map((token) => ({
+      to: token,
+      sound: "default",
+      title: title,
+      body: body,
+      data: {
+        type: "submission_status",
+        id: submission._id.toString(),
+        status: status,
+      },
+    }));
+
+    const chunks = expo.chunkPushNotifications(messages);
+
+    for (const chunk of chunks) {
+      try {
+        await expo.sendPushNotificationsAsync(chunk);
+      } catch (error) {
+        console.error("Expo push error (Submission):", error);
+      }
+    }
+  }
+
+  // --- Send FCM Notifications (Firebase) ---
+  if (fcmTokens.length > 0) {
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      data: {
+        type: "submission_status",
+        id: submission._id.toString(),
+        status: status,
+      },
+      tokens: fcmTokens,
+    };
+
+    try {
+      const response = await admin.messaging().sendEachForMulticast(message);
+      if (response.failureCount > 0) {
+        console.error("FCM error (Submission):", response.responses);
+      }
+    } catch (error) {
+      console.error("FCM push global error (Submission):", error);
+    }
+  }
+};
